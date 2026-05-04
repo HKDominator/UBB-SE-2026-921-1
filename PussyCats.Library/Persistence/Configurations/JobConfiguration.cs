@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PussyCats.Library.Domain;
+using PussyCats.Library.Domain.Enums;
 
 namespace PussyCats.Library.Persistence.Configurations;
 
@@ -15,6 +16,9 @@ public class JobConfiguration : IEntityTypeConfiguration<Job>
         builder.Property(j => j.JobDescription).HasMaxLength(4000);
         builder.Property(j => j.Location).HasMaxLength(100);
         builder.Property(j => j.EmploymentType).HasMaxLength(40);
+
+        // Stored as int by EF convention; no HasConversion needed.
+        builder.Property(j => j.JobRole);
 
         // Restrict: deleting a company should not nuke its job postings. Archive instead.
         builder.HasOne(j => j.Company)
@@ -42,6 +46,7 @@ public class JobConfiguration : IEntityTypeConfiguration<Job>
                 EmploymentType = "Hybrid",
                 CompanyId = 1,
                 PromotionLevel = 2,
+                JobRole = JobRole.BackendDeveloper,
             },
             new Job
             {
@@ -52,6 +57,7 @@ public class JobConfiguration : IEntityTypeConfiguration<Job>
                 EmploymentType = "Full-time",
                 CompanyId = 2,
                 PromotionLevel = 1,
+                JobRole = JobRole.FrontendDeveloper,
             },
             new Job
             {
@@ -62,6 +68,7 @@ public class JobConfiguration : IEntityTypeConfiguration<Job>
                 EmploymentType = "Hybrid",
                 CompanyId = 3,
                 PromotionLevel = 1,
+                JobRole = JobRole.DataAnalyst,
             });
     }
 }

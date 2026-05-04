@@ -11,6 +11,10 @@ public class PersonalityTestResultConfiguration : IEntityTypeConfiguration<Perso
         builder.ToTable("PersonalityTestResults");
         builder.HasKey(r => r.PersonalityTestResultId);
 
+        // Nullable: null means "test taken but role not yet selected / not taken."
+        // Stored as int by EF convention; no HasConversion needed.
+        builder.Property(r => r.SelectedRole).IsRequired(false);
+
         // Cascade: deleting the result removes its trait scores. The User -> PersonalityResult
         // cascade is configured on UserConfiguration.
         builder.HasMany(r => r.TraitScores)

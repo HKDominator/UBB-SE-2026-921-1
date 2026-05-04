@@ -1,10 +1,15 @@
 using PussyCats.Library.Domain;
 using PussyCats.Library.Domain.Enums;
+using PussyCats.Library.DTOs;
 
 namespace PussyCats.App.Services;
 
 public interface IMatchService
 {
+    Task<IReadOnlyList<Match>> GetMatchesForUserAsync(int userId, CancellationToken ct = default);
+
+    Task<MatchStatistics> GetMatchStatisticsAsync(int userId, CancellationToken ct = default);
+
     Task<Match?> GetByIdAsync(int matchId, CancellationToken ct = default);
 
     Task<Match?> GetByUserIdAndJobIdAsync(int userId, int jobId, CancellationToken ct = default);

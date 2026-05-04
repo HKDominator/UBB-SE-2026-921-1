@@ -1,3 +1,5 @@
+using PussyCats.Library.Domain.Enums;
+
 namespace PussyCats.Library.Domain;
 
 public class Job
@@ -9,6 +11,7 @@ public class Job
     public string Location { get; set; } = string.Empty;
     public string EmploymentType { get; set; } = string.Empty;
     public int PromotionLevel { get; set; }
+    public JobRole JobRole { get; set; }
 
     public int CompanyId { get; set; }
     public Company Company { get; set; } = null!;

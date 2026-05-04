@@ -1,11 +1,17 @@
 using PussyCats.Library.Domain;
 using PussyCats.Library.Domain.Enums;
+using PussyCats.Library.DTOs;
 using PussyCats.Library.Repositories.Matches;
 
 namespace PussyCats.App.Services;
 
 public class MatchService : IMatchService
 {
+    private const int LastMonth = 1;
+    private const int LastSixMonths = 6;
+    private const int LastYear = 12;
+
+
     private readonly IMatchRepository matchRepository;
     private readonly IJobService jobService;
 
@@ -13,6 +19,25 @@ public class MatchService : IMatchService
     {
         this.matchRepository = matchRepository;
         this.jobService = jobService;
+    }
+
+    public async Task<IReadOnlyList<Match>> GetMatchesForUserAsync(int userId, CancellationToken ct = default)
+    {
+        return await matchRepository.GetByUserIdAsync(userId, ct).ConfigureAwait(false);
+    }
+
+    public async Task<MatchStatistics> GetMatchStatisticsAsync(int userId, CancellationToken ct = default)
+    {
+        var matches = await matchRepository.GetByUserIdAsync(userId, ct).ConfigureAwait(false);
+        var matchStatistics = new MatchStatistics();
+
+        matchStatistics.TotalMatches = matches.Count;
+        matchStatistics.MatchesLastMonth = CountMatchesInLastMonths(matches, LastMonth);
+        matchStatistics.MatchesLastSixMonths = CountMatchesInLastMonths(matches, LastSixMonths);
+        matchStatistics.MatchesLastYear = CountMatchesInLastMonths(matches, LastYear);
+        matchStatistics.MatchesPerPosition = GroupMatchesByPosition(matches);
+
+        return matchStatistics;
     }
 
     public async Task<Match?> GetByIdAsync(int matchId, CancellationToken ct = default)
@@ -170,4 +195,63 @@ public class MatchService : IMatchService
     {
         return right.Timestamp.CompareTo(left.Timestamp);
     }
+
+    private static int CountMatchesInLastMonths(IReadOnlyList<Match> matches, int months)
+    {
+        DateTime cutoffDate = DateTime.Now.AddMonths(-months);
+        int matchesInPeriodCount = 0;
+
+        foreach (var match in matches)
+        {
+            if (match.Timestamp > cutoffDate)
+            {
+                matchesInPeriodCount++;
+            }
+        }
+
+        return matchesInPeriodCount;
+    }
+
+    private static Dictionary<string, int> GroupMatchesByPosition(IReadOnlyList<Match> matches)
+    {
+        var positionCounts = new Dictionary<string, int>();
+
+        foreach (var match in matches)
+        {
+            if (match.Job is null)
+            {
+                continue;
+            }
+
+            string position = GetPositionKey(match.Job.JobRole);
+
+            if (positionCounts.ContainsKey(position))
+            {
+                positionCounts[position]++;
+            }
+            else
+            {
+                positionCounts.Add(position, 1);
+            }
+        }
+
+        return positionCounts;
+    }
+
+    // Display labels for the MatchesPerPosition stats card. Original
+    // PussyCatsApp stored free-form strings in the DB; the merged model
+    // uses the JobRole enum as canonical source. These labels are what
+    // the UI shows. Update here if Phase 6 design wants different wording.
+    private static string GetPositionKey(JobRole role) => role switch
+    {
+        JobRole.FrontendDeveloper        => "Frontend",
+        JobRole.BackendDeveloper         => "Backend",
+        JobRole.UiUxDesigner             => "UI/UX Design",
+        JobRole.DevOpsEngineer           => "DevOps",
+        JobRole.ProjectManager           => "Project Management",
+        JobRole.DataAnalyst              => "Data Analysis",
+        JobRole.CybersecuritySpecialist  => "Cybersecurity",
+        JobRole.AiMlEngineer             => "AI/ML Engineering",
+        _                                => role.ToString(),
+    };
 }

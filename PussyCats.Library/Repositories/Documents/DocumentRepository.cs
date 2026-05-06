@@ -20,7 +20,7 @@ public class DocumentRepository : IDocumentRepository
     public async Task<Document?> GetByIdAsync(int documentId, CancellationToken cancellationToken = default)
     {
         return await db.Documents
-            .FirstOrDefaultAsync(d => d.DocumentId == documentId, cancellationToken)
+            .FirstOrDefaultAsync(document => document.DocumentId == documentId, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -32,7 +32,7 @@ public class DocumentRepository : IDocumentRepository
     {
         return await db.Documents
             .AsNoTracking()
-            .Where(d => d.UserId == userId)
+            .Where(document => document.UserId == userId)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }

@@ -22,7 +22,7 @@ public class JobConfiguration : IEntityTypeConfiguration<Job>
 
         // Restrict: deleting a company should not nuke its job postings. Archive instead.
         builder.HasOne(job => job.Company)
-            .WithMany(c => c.Jobs)
+            .WithMany(company => company.Jobs)
             .HasForeignKey(job => job.CompanyId)
             .OnDelete(DeleteBehavior.Restrict);
 

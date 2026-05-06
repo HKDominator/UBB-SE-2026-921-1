@@ -17,7 +17,7 @@ public class QuestionRepository : IQuestionRepository
     {
         return await db.Questions
             .AsNoTracking()
-            .FirstOrDefaultAsync(q => q.QuestionId == questionId, cancellationToken)
+            .FirstOrDefaultAsync(question => question.QuestionId == questionId, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -29,7 +29,7 @@ public class QuestionRepository : IQuestionRepository
     {
         return await db.Questions
             .AsNoTracking()
-            .OrderBy(q => q.SortOrder)
+            .OrderBy(question => question.SortOrder)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }

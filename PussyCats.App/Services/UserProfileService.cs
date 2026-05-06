@@ -65,7 +65,7 @@ public class UserProfileService : IUserProfileService
         var parsedCvTextBuilder = new StringBuilder();
         parsedCvTextBuilder.AppendLine($"{user.FirstName} {user.LastName}".Trim());
         parsedCvTextBuilder.AppendLine(user.University ?? string.Empty);
-        parsedCvTextBuilder.AppendLine(string.Join(", ", user.Skills.Select(skill => skill.Skill?.Name ?? string.Empty).Where(n => !string.IsNullOrEmpty(n))));
+        parsedCvTextBuilder.AppendLine(string.Join(", ", user.Skills.Select(skill => skill.Skill?.Name ?? string.Empty).Where(name => !string.IsNullOrEmpty(name))));
         return parsedCvTextBuilder.ToString().TrimEnd();
     }
 

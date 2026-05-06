@@ -22,7 +22,7 @@ public class SkillGroupRepository : ISkillGroupRepository
     {
         return await db.SkillGroups
             .AsNoTracking()
-            .Include(g => g.Skills)
+            .Include(group => group.Skills)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
@@ -36,8 +36,8 @@ public class SkillGroupRepository : ISkillGroupRepository
     {
         return await db.SkillGroups
             .AsNoTracking()
-            .Include(g => g.Skills)
-            .Where(g => g.JobRole == jobRole)
+            .Include(group => group.Skills)
+            .Where(group => group.JobRole == jobRole)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }

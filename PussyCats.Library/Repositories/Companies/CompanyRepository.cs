@@ -20,8 +20,8 @@ public class CompanyRepository : ICompanyRepository
     public async Task<Company?> GetByIdAsync(int companyId, CancellationToken cancellationToken = default)
     {
         return await db.Companies
-            .Include(c => c.Jobs)
-            .FirstOrDefaultAsync(c => c.CompanyId == companyId, cancellationToken)
+            .Include(company => company.Jobs)
+            .FirstOrDefaultAsync(company => company.CompanyId == companyId, cancellationToken)
             .ConfigureAwait(false);
     }
 

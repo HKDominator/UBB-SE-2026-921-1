@@ -21,12 +21,12 @@ public class UserRepository : IUserRepository
     public async Task<User?> GetByIdAsync(int userId, CancellationToken cancellationToken = default)
     {
         return await db.Users
-            .Include(u => u.WorkExperiences)
-            .Include(u => u.Projects)
-            .Include(u => u.ExtraCurricularActivities)
-            .Include(u => u.Skills).ThenInclude(skill => skill.Skill)
-            .Include(u => u.PersonalityResult)!.ThenInclude(result => result!.TraitScores)
-            .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken)
+            .Include(user => user.WorkExperiences)
+            .Include(user => user.Projects)
+            .Include(user => user.ExtraCurricularActivities)
+            .Include(user => user.Skills).ThenInclude(skill => skill.Skill)
+            .Include(user => user.PersonalityResult)!.ThenInclude(result => result!.TraitScores)
+            .FirstOrDefaultAsync(user => user.UserId == userId, cancellationToken)
             .ConfigureAwait(false);
     }
 

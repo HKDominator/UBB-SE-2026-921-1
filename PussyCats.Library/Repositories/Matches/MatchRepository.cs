@@ -20,9 +20,9 @@ public class MatchRepository : IMatchRepository
     public async Task<Match?> GetByIdAsync(int matchId, CancellationToken cancellationToken = default)
     {
         return await db.Matches
-            .Include(m => m.User)
-            .Include(m => m.Job).ThenInclude(job => job.Company)
-            .FirstOrDefaultAsync(m => m.MatchId == matchId, cancellationToken)
+            .Include(match => match.User)
+            .Include(match => match.Job).ThenInclude(job => job.Company)
+            .FirstOrDefaultAsync(match => match.MatchId == matchId, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -30,7 +30,7 @@ public class MatchRepository : IMatchRepository
     {
         return await db.Matches
             .AsNoTracking()
-            .Include(m => m.Job).ThenInclude(job => job.Company)
+            .Include(match => match.Job).ThenInclude(job => job.Company)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
@@ -44,9 +44,9 @@ public class MatchRepository : IMatchRepository
     {
         return await db.Matches
             .AsNoTracking()
-            .Where(m => m.UserId == userId)
-            .Include(m => m.Job).ThenInclude(job => job.Company)
-            .OrderByDescending(m => m.Timestamp)
+            .Where(match => match.UserId == userId)
+            .Include(match => match.Job).ThenInclude(job => job.Company)
+            .OrderByDescending(match => match.Timestamp)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
@@ -58,7 +58,7 @@ public class MatchRepository : IMatchRepository
     public async Task<Match?> GetByUserIdAndJobIdAsync(int userId, int jobId, CancellationToken cancellationToken = default)
     {
         return await db.Matches
-            .FirstOrDefaultAsync(m => m.UserId == userId && m.JobId == jobId, cancellationToken)
+            .FirstOrDefaultAsync(match => match.UserId == userId && match.JobId == jobId, cancellationToken)
             .ConfigureAwait(false);
     }
 

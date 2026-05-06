@@ -17,24 +17,24 @@ public class MatchesController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id, CancellationToken ct)
+    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
     {
-        var match = await matches.GetByIdAsync(id, ct);
+        var match = await matches.GetByIdAsync(id, cancellationToken);
         return match is null ? NotFound() : Ok(match);
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int? userId, CancellationToken ct)
+    public async Task<IActionResult> GetAll([FromQuery] int? userId, CancellationToken cancellationToken)
     {
         if (userId.HasValue)
-            return Ok(await matches.GetByUserIdAsync(userId.Value, ct));
-        return Ok(await matches.GetAllAsync(ct));
+            return Ok(await matches.GetByUserIdAsync(userId.Value, cancellationToken));
+        return Ok(await matches.GetAllAsync(cancellationToken));
     }
 
     [HttpPost]
-    public async Task<IActionResult> Add([FromBody] CreateMatchRequest body, CancellationToken ct)
+    public async Task<IActionResult> Add([FromBody] CreateMatchRequest body, CancellationToken cancellationToken)
     {
-        if (await matches.GetByUserIdAndJobIdAsync(body.UserId, body.JobId, ct) is not null)
+        if (await matches.GetByUserIdAndJobIdAsync(body.UserId, body.JobId, cancellationToken) is not null)
             return Problem(detail: "A match already exists for this user and job.", statusCode: 409);
 
         var match = new Match
@@ -46,23 +46,23 @@ public class MatchesController : ControllerBase
             FeedbackMessage = string.Empty,
         };
 
-        var saved = await matches.AddAsync(match, ct);
+        var saved = await matches.AddAsync(match, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = saved.MatchId }, saved);
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Remove(int id, CancellationToken ct)
+    public async Task<IActionResult> Remove(int id, CancellationToken cancellationToken)
     {
-        if (await matches.GetByIdAsync(id, ct) is null)
+        if (await matches.GetByIdAsync(id, cancellationToken) is null)
             return NotFound();
-        await matches.RemoveAsync(id, ct);
+        await matches.RemoveAsync(id, cancellationToken);
         return NoContent();
     }
 
     [HttpPatch("{id}/decision")]
-    public async Task<IActionResult> SubmitDecision(int id, [FromBody] SubmitDecisionRequest body, CancellationToken ct)
+    public async Task<IActionResult> SubmitDecision(int id, [FromBody] SubmitDecisionRequest body, CancellationToken cancellationToken)
     {
-        var match = await matches.GetByIdAsync(id, ct);
+        var match = await matches.GetByIdAsync(id, cancellationToken);
         if (match is null)
             return NotFound();
 
@@ -77,14 +77,14 @@ public class MatchesController : ControllerBase
         match.Status = body.Decision;
         match.FeedbackMessage = (body.Feedback ?? string.Empty).Trim();
         match.Timestamp = DateTime.UtcNow;
-        await matches.UpdateAsync(match, ct);
+        await matches.UpdateAsync(match, cancellationToken);
         return NoContent();
     }
 
     [HttpPatch("{id}/advance")]
-    public async Task<IActionResult> Advance(int id, CancellationToken ct)
+    public async Task<IActionResult> Advance(int id, CancellationToken cancellationToken)
     {
-        var match = await matches.GetByIdAsync(id, ct);
+        var match = await matches.GetByIdAsync(id, cancellationToken);
         if (match is null)
             return NotFound();
 
@@ -95,7 +95,7 @@ public class MatchesController : ControllerBase
 
         match.Status = MatchStatus.Advanced;
         match.Timestamp = DateTime.UtcNow;
-        await matches.UpdateAsync(match, ct);
+        await matches.UpdateAsync(match, cancellationToken);
         return NoContent();
     }
 

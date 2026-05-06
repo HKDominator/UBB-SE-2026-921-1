@@ -20,39 +20,39 @@ public class PersonalityTestRepository : IPersonalityTestRepository
     /// a single string column off the Users table and returned that. The new model stores trait
     /// scores as first-class rows, so the return shape is the structured PersonalityTestResult.
     /// </summary>
-    public async Task<PersonalityTestResult?> GetByUserIdAsync(int userId, CancellationToken ct = default)
+    public async Task<PersonalityTestResult?> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
         return await db.PersonalityTestResults
             .Include(r => r.TraitScores)
-            .FirstOrDefaultAsync(r => r.UserId == userId, ct)
+            .FirstOrDefaultAsync(r => r.UserId == userId, cancellationToken)
             .ConfigureAwait(false);
     }
 
-    public async Task<PersonalityTestResult> AddAsync(PersonalityTestResult result, CancellationToken ct = default)
+    public async Task<PersonalityTestResult> AddAsync(PersonalityTestResult result, CancellationToken cancellationToken = default)
     {
         if (result.CompletedAt == default)
         {
             result.CompletedAt = DateTime.UtcNow;
         }
         db.PersonalityTestResults.Add(result);
-        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return result;
     }
 
-    public async Task UpdateAsync(PersonalityTestResult result, CancellationToken ct = default)
+    public async Task UpdateAsync(PersonalityTestResult result, CancellationToken cancellationToken = default)
     {
         db.PersonalityTestResults.Update(result);
-        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task RemoveAsync(int personalityTestResultId, CancellationToken ct = default)
+    public async Task RemoveAsync(int personalityTestResultId, CancellationToken cancellationToken = default)
     {
-        var result = await db.PersonalityTestResults.FindAsync(new object?[] { personalityTestResultId }, ct).ConfigureAwait(false);
+        var result = await db.PersonalityTestResults.FindAsync(new object?[] { personalityTestResultId }, cancellationToken).ConfigureAwait(false);
         if (result is null)
         {
             return;
         }
         db.PersonalityTestResults.Remove(result);
-        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }

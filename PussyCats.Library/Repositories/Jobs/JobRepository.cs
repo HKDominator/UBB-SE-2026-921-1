@@ -17,12 +17,12 @@ public class JobRepository : IJobRepository
     /// Includes Company and RequiredSkills.Skill so a job-detail screen has everything it needs
     /// to render. Tracked because the typical caller (recruiter editing a posting) mutates.
     /// </summary>
-    public async Task<Job?> GetByIdAsync(int jobId, CancellationToken ct = default)
+    public async Task<Job?> GetByIdAsync(int jobId, CancellationToken cancellationToken = default)
     {
         return await db.Jobs
             .Include(j => j.Company)
             .Include(j => j.RequiredSkills).ThenInclude(s => s.Skill)
-            .FirstOrDefaultAsync(j => j.JobId == jobId, ct)
+            .FirstOrDefaultAsync(j => j.JobId == jobId, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -30,12 +30,12 @@ public class JobRepository : IJobRepository
     /// Browse-jobs listing — includes Company so the listing card can show the employer name
     /// without an N+1.
     /// </summary>
-    public async Task<IReadOnlyList<Job>> GetAllAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<Job>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await db.Jobs
             .AsNoTracking()
             .Include(j => j.Company)
-            .ToListAsync(ct)
+            .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -43,36 +43,36 @@ public class JobRepository : IJobRepository
     /// Original: matchmaking JobRepository.GetByCompanyId — straight LINQ port of the foreach
     /// filter on CompanyId. Read-only, no Includes (callers already have the Company).
     /// </summary>
-    public async Task<IReadOnlyList<Job>> GetByCompanyIdAsync(int companyId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Job>> GetByCompanyIdAsync(int companyId, CancellationToken cancellationToken = default)
     {
         return await db.Jobs
             .AsNoTracking()
             .Where(j => j.CompanyId == companyId)
-            .ToListAsync(ct)
+            .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
 
-    public async Task<Job> AddAsync(Job job, CancellationToken ct = default)
+    public async Task<Job> AddAsync(Job job, CancellationToken cancellationToken = default)
     {
         db.Jobs.Add(job);
-        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return job;
     }
 
-    public async Task UpdateAsync(Job job, CancellationToken ct = default)
+    public async Task UpdateAsync(Job job, CancellationToken cancellationToken = default)
     {
         db.Jobs.Update(job);
-        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task RemoveAsync(int jobId, CancellationToken ct = default)
+    public async Task RemoveAsync(int jobId, CancellationToken cancellationToken = default)
     {
-        var job = await db.Jobs.FindAsync(new object?[] { jobId }, ct).ConfigureAwait(false);
+        var job = await db.Jobs.FindAsync(new object?[] { jobId }, cancellationToken).ConfigureAwait(false);
         if (job is null)
         {
             return;
         }
         db.Jobs.Remove(job);
-        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }

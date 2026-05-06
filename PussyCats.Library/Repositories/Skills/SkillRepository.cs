@@ -13,46 +13,46 @@ public class SkillRepository : ISkillRepository
         this.db = db;
     }
 
-    public async Task<Skill?> GetByIdAsync(int skillId, CancellationToken ct = default)
+    public async Task<Skill?> GetByIdAsync(int skillId, CancellationToken cancellationToken = default)
     {
         return await db.Skills
-            .FirstOrDefaultAsync(s => s.SkillId == skillId, ct)
+            .FirstOrDefaultAsync(s => s.SkillId == skillId, cancellationToken)
             .ConfigureAwait(false);
     }
 
     /// <summary>
     /// Catalog listing — read-only, ordered by name for stable UI rendering.
     /// </summary>
-    public async Task<IReadOnlyList<Skill>> GetAllAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<Skill>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await db.Skills
             .AsNoTracking()
             .OrderBy(s => s.Name)
-            .ToListAsync(ct)
+            .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
 
-    public async Task<Skill> AddAsync(Skill skill, CancellationToken ct = default)
+    public async Task<Skill> AddAsync(Skill skill, CancellationToken cancellationToken = default)
     {
         db.Skills.Add(skill);
-        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return skill;
     }
 
-    public async Task UpdateAsync(Skill skill, CancellationToken ct = default)
+    public async Task UpdateAsync(Skill skill, CancellationToken cancellationToken = default)
     {
         db.Skills.Update(skill);
-        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task RemoveAsync(int skillId, CancellationToken ct = default)
+    public async Task RemoveAsync(int skillId, CancellationToken cancellationToken = default)
     {
-        var skill = await db.Skills.FindAsync(new object?[] { skillId }, ct).ConfigureAwait(false);
+        var skill = await db.Skills.FindAsync(new object?[] { skillId }, cancellationToken).ConfigureAwait(false);
         if (skill is null)
         {
             return;
         }
         db.Skills.Remove(skill);
-        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }

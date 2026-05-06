@@ -17,10 +17,10 @@ public class DocumentRepository : IDocumentRepository
     /// Tracked — typical caller (FilesController.Delete) mutates immediately. No User include
     /// because the path is already enough to serve the file.
     /// </summary>
-    public async Task<Document?> GetByIdAsync(int documentId, CancellationToken ct = default)
+    public async Task<Document?> GetByIdAsync(int documentId, CancellationToken cancellationToken = default)
     {
         return await db.Documents
-            .FirstOrDefaultAsync(d => d.DocumentId == documentId, ct)
+            .FirstOrDefaultAsync(d => d.DocumentId == documentId, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -28,34 +28,34 @@ public class DocumentRepository : IDocumentRepository
     /// Original: PussyCatsApp DocumentRepository.GetDocumentsByUserId — straight predicate port.
     /// Read-only listing.
     /// </summary>
-    public async Task<IReadOnlyList<Document>> GetByUserIdAsync(int userId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Document>> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
         return await db.Documents
             .AsNoTracking()
             .Where(d => d.UserId == userId)
-            .ToListAsync(ct)
+            .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
 
-    public async Task<Document> AddAsync(Document document, CancellationToken ct = default)
+    public async Task<Document> AddAsync(Document document, CancellationToken cancellationToken = default)
     {
         if (document.UploadDate == default)
         {
             document.UploadDate = DateTime.UtcNow;
         }
         db.Documents.Add(document);
-        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return document;
     }
 
-    public async Task RemoveAsync(int documentId, CancellationToken ct = default)
+    public async Task RemoveAsync(int documentId, CancellationToken cancellationToken = default)
     {
-        var document = await db.Documents.FindAsync(new object?[] { documentId }, ct).ConfigureAwait(false);
+        var document = await db.Documents.FindAsync(new object?[] { documentId }, cancellationToken).ConfigureAwait(false);
         if (document is null)
         {
             return;
         }
         db.Documents.Remove(document);
-        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }

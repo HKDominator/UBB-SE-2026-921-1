@@ -18,12 +18,12 @@ public class SkillGroupRepository : ISkillGroupRepository
     /// Read-only listing — includes Skills so CompatibilityService can score without N+1
     /// fetches against the catalog.
     /// </summary>
-    public async Task<IReadOnlyList<SkillGroup>> GetAllAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<SkillGroup>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await db.SkillGroups
             .AsNoTracking()
             .Include(g => g.Skills)
-            .ToListAsync(ct)
+            .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -32,13 +32,13 @@ public class SkillGroupRepository : ISkillGroupRepository
     /// port. CompatibilityService scores against this list per role; the Skills include is the
     /// whole point of the call.
     /// </summary>
-    public async Task<IReadOnlyList<SkillGroup>> GetByJobRoleAsync(JobRole jobRole, CancellationToken ct = default)
+    public async Task<IReadOnlyList<SkillGroup>> GetByJobRoleAsync(JobRole jobRole, CancellationToken cancellationToken = default)
     {
         return await db.SkillGroups
             .AsNoTracking()
             .Include(g => g.Skills)
             .Where(g => g.JobRole == jobRole)
-            .ToListAsync(ct)
+            .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
 }

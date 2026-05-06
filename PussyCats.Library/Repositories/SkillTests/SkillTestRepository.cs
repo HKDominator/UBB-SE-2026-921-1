@@ -18,10 +18,10 @@ public class SkillTestRepository : ISkillTestRepository
     /// found; the new contract returns null instead, matching the IXRepository nullable return
     /// shape and the §22 rule that not-found is not exceptional.
     /// </summary>
-    public async Task<SkillTest?> GetByIdAsync(int skillTestId, CancellationToken ct = default)
+    public async Task<SkillTest?> GetByIdAsync(int skillTestId, CancellationToken cancellationToken = default)
     {
         return await db.SkillTests
-            .FirstOrDefaultAsync(t => t.SkillTestId == skillTestId, ct)
+            .FirstOrDefaultAsync(t => t.SkillTestId == skillTestId, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -29,19 +29,19 @@ public class SkillTestRepository : ISkillTestRepository
     /// Original: PussyCatsApp SkillTestRepository.GetSkillTestsByUserId — straight predicate
     /// port. Read-only.
     /// </summary>
-    public async Task<IReadOnlyList<SkillTest>> GetByUserIdAsync(int userId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<SkillTest>> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
         return await db.SkillTests
             .AsNoTracking()
             .Where(t => t.UserId == userId)
-            .ToListAsync(ct)
+            .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
 
-    public async Task<SkillTest> AddAsync(SkillTest skillTest, CancellationToken ct = default)
+    public async Task<SkillTest> AddAsync(SkillTest skillTest, CancellationToken cancellationToken = default)
     {
         db.SkillTests.Add(skillTest);
-        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return skillTest;
     }
 
@@ -50,40 +50,40 @@ public class SkillTestRepository : ISkillTestRepository
     /// load + mutate + save rather than UPDATE WHERE id; the change-tracker emits exactly the
     /// SET score column SQL.
     /// </summary>
-    public async Task UpdateScoreAsync(int skillTestId, int score, CancellationToken ct = default)
+    public async Task UpdateScoreAsync(int skillTestId, int score, CancellationToken cancellationToken = default)
     {
-        var test = await db.SkillTests.FindAsync(new object?[] { skillTestId }, ct).ConfigureAwait(false);
+        var test = await db.SkillTests.FindAsync(new object?[] { skillTestId }, cancellationToken).ConfigureAwait(false);
         if (test is null)
         {
             return;
         }
         test.Score = score;
-        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
     /// Original: PussyCatsApp SkillTestRepository.UpdateAchievedDate. Same pattern as score:
     /// targeted column update through the change tracker.
     /// </summary>
-    public async Task UpdateAchievedDateAsync(int skillTestId, DateOnly achievedDate, CancellationToken ct = default)
+    public async Task UpdateAchievedDateAsync(int skillTestId, DateOnly achievedDate, CancellationToken cancellationToken = default)
     {
-        var test = await db.SkillTests.FindAsync(new object?[] { skillTestId }, ct).ConfigureAwait(false);
+        var test = await db.SkillTests.FindAsync(new object?[] { skillTestId }, cancellationToken).ConfigureAwait(false);
         if (test is null)
         {
             return;
         }
         test.AchievedDate = achievedDate;
-        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task RemoveAsync(int skillTestId, CancellationToken ct = default)
+    public async Task RemoveAsync(int skillTestId, CancellationToken cancellationToken = default)
     {
-        var test = await db.SkillTests.FindAsync(new object?[] { skillTestId }, ct).ConfigureAwait(false);
+        var test = await db.SkillTests.FindAsync(new object?[] { skillTestId }, cancellationToken).ConfigureAwait(false);
         if (test is null)
         {
             return;
         }
         db.SkillTests.Remove(test);
-        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }

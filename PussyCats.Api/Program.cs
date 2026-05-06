@@ -12,9 +12,14 @@ using PussyCats.Library.Repositories.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+/// Note: this is only a temporary solution! The real solution is to use DTOs that don't have cycles in the first place, but this is a quick fix to unblock development.
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler =
+            System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 
-builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -34,7 +39,6 @@ builder.Services.AddScoped<ISkillGroupRepository, SkillGroupRepository>();
 builder.Services.AddScoped<ISkillRepository, SkillRepository>();
 builder.Services.AddScoped<IUserSkillRepository, UserSkillRepository>();
 builder.Services.AddScoped<ISkillTestRepository, SkillTestRepository>();
-
 
 var app = builder.Build();
 

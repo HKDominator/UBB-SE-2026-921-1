@@ -22,7 +22,9 @@ namespace PussyCats_App;
 public partial class App : Application
 {
     private Window? _window;
-    
+
+    public static Window? MainAppWindow { get; private set; }
+
     /// <summary>
     /// Initializes the singleton application object.  This is the first line of authored code
     /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -39,6 +41,7 @@ public partial class App : Application
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
         _window = new MainWindow();
+        MainAppWindow = _window;
         _window.Activate();
     }
 }

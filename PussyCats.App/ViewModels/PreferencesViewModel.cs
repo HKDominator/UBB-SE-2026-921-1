@@ -54,28 +54,17 @@ public class PreferencesViewModel : DispatchableObservableObject
         SelectedJobRoles.Clear();
         ErrorMessage = string.Empty;
 
-        var savedPreferences = await preferencesService
+        var preferences = await preferencesService
             .GetByUserIdAsync(ViewModelSupport.ResolveUserId(session), cancellationToken)
             ;
 
-        foreach (var preference in savedPreferences)
+        foreach (var jobRole in preferences.Roles)
         {
-            if (preference.PreferenceType == "JobRole" &&
-                Enum.TryParse<JobRole>(preference.Value, out var jobRole))
-            {
-                SelectedJobRoles.Add(jobRole);
-            }
-            else if (preference.PreferenceType == "WorkMode" &&
-                     Enum.TryParse<WorkMode>(preference.Value, out var workMode))
-            {
-                SelectedWorkMode = workMode;
-            }
-            else if (preference.PreferenceType == "Location")
-            {
-                PreferredLocation = preference.Value;
-            }
+            SelectedJobRoles.Add(jobRole);
         }
 
+        SelectedWorkMode = preferences.WorkMode;
+        PreferredLocation = preferences.Location;
         OnPropertyChanged(nameof(SelectedJobRoles));
     }
 

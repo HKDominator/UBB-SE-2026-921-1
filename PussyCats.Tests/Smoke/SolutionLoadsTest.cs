@@ -20,7 +20,6 @@ public class SolutionLoadsTest
         new FakeSkillGroupRepository().Should().NotBeNull();
         new FakeSkillTestRepository().Should().NotBeNull();
         new FakePersonalityTestRepository().Should().NotBeNull();
-        new FakeQuestionRepository().Should().NotBeNull();
         new FakeRecommendationRepository().Should().NotBeNull();
 
         new UserBuilder().Build().Should().NotBeNull();

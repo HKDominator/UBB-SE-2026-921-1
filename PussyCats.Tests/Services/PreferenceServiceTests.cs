@@ -21,11 +21,13 @@ public class PreferenceServiceTests
     {
         var result = await service.GetByUserIdAsync(99);
 
-        result.Should().BeEmpty();
+        result.Roles.Should().BeEmpty();
+        result.WorkMode.Should().Be(default);
+        result.Location.Should().BeEmpty();
     }
 
     [Fact]
-    public async Task GetByUserIdAsync_translates_user_fields_into_preferences()
+    public async Task GetByUserIdAsync_translates_user_fields_into_user_preferences()
     {
         var user = new UserBuilder().WithId(1).Build();
         user.PreferredEmploymentType = "BackendDeveloper,FrontendDeveloper";
@@ -35,11 +37,9 @@ public class PreferenceServiceTests
 
         var result = await service.GetByUserIdAsync(1);
 
-        result.Should().HaveCount(4);
-        result.Should().Contain(p => p.PreferenceType == "JobRole" && p.Value == "BackendDeveloper");
-        result.Should().Contain(p => p.PreferenceType == "JobRole" && p.Value == "FrontendDeveloper");
-        result.Should().Contain(p => p.PreferenceType == "WorkMode" && p.Value == "Remote");
-        result.Should().Contain(p => p.PreferenceType == "Location" && p.Value == "Cluj-Napoca, Romania");
+        result.Roles.Should().Equal(JobRole.BackendDeveloper, JobRole.FrontendDeveloper);
+        result.WorkMode.Should().Be(WorkMode.Remote);
+        result.Location.Should().Be("Cluj-Napoca, Romania");
     }
 
     [Fact]
@@ -53,8 +53,9 @@ public class PreferenceServiceTests
 
         var result = await service.GetByUserIdAsync(1);
 
-        result.Should().HaveCount(1);
-        result[0].PreferenceType.Should().Be("WorkMode");
+        result.Roles.Should().BeEmpty();
+        result.WorkMode.Should().Be(WorkMode.Remote);
+        result.Location.Should().BeEmpty();
     }
 
     [Fact]

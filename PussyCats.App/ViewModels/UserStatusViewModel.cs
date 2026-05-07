@@ -76,13 +76,16 @@ public class UserStatusViewModel : DispatchableObservableObject
         {
             var applications = await userStatusService.GetApplicationsForUserAsync(userId, cancellationToken);
 
-            AppliedJobs.Clear();
-            foreach (var application in applications)
+            await UIDispatcher.EnqueueAsync(() =>
             {
-                AppliedJobs.Add(application);
-            }
+                AppliedJobs.Clear();
+                foreach (var application in applications)
+                {
+                    AppliedJobs.Add(application);
+                }
 
-            ApplyFilter(CurrentFilter);
+                ApplyFilter(CurrentFilter);
+            });
         }
         catch
         {
@@ -98,45 +101,51 @@ public class UserStatusViewModel : DispatchableObservableObject
             var missingSkills = await skillGapService.GetMissingSkillsAsync(userId, cancellationToken);
             var underscoredSkills = await skillGapService.GetUnderscoredSkillsAsync(userId, cancellationToken);
 
-            UnderscoredSkills.Clear();
-            SkillGapMissingSkills.Clear();
+            await UIDispatcher.EnqueueAsync(() =>
+            {
+                UnderscoredSkills.Clear();
+                SkillGapMissingSkills.Clear();
 
-            if (!summary.HasRejections)
-            {
-                SkillGapMessage = "No rejections yet - keep applying to see your skill insights.";
-                HasSkillGapMessage = true;
-                ShowSkillData = false;
-            }
-            else if (!summary.HasSkillGaps)
-            {
-                SkillGapMessage = "Great news - your skills meet the requirements of all jobs you have applied to.";
-                HasSkillGapMessage = true;
-                ShowSkillData = false;
-            }
-            else
-            {
-                SkillGapSummaryText = $"{summary.MissingSkillsCount} missing skills - {summary.SkillsToImproveCount} skills to improve";
-                HasSkillGapMessage = false;
-                ShowSkillData = true;
-
-                foreach (var skill in underscoredSkills)
+                if (!summary.HasRejections)
                 {
-                    UnderscoredSkills.Add(skill);
+                    SkillGapMessage = "No rejections yet - keep applying to see your skill insights.";
+                    HasSkillGapMessage = true;
+                    ShowSkillData = false;
                 }
-
-                foreach (var skill in missingSkills)
+                else if (!summary.HasSkillGaps)
                 {
-                    SkillGapMissingSkills.Add(skill);
+                    SkillGapMessage = "Great news - your skills meet the requirements of all jobs you have applied to.";
+                    HasSkillGapMessage = true;
+                    ShowSkillData = false;
                 }
-            }
+                else
+                {
+                    SkillGapSummaryText = $"{summary.MissingSkillsCount} missing skills - {summary.SkillsToImproveCount} skills to improve";
+                    HasSkillGapMessage = false;
+                    ShowSkillData = true;
+
+                    foreach (var skill in underscoredSkills)
+                    {
+                        UnderscoredSkills.Add(skill);
+                    }
+
+                    foreach (var skill in missingSkills)
+                    {
+                        SkillGapMissingSkills.Add(skill);
+                    }
+                }
+            });
         }
         catch
         {
-            UnderscoredSkills.Clear();
-            SkillGapMissingSkills.Clear();
-            SkillGapMessage = "Skill gap analysis is temporarily unavailable.";
-            HasSkillGapMessage = true;
-            ShowSkillData = false;
+            await UIDispatcher.EnqueueAsync(() =>
+            {
+                UnderscoredSkills.Clear();
+                SkillGapMissingSkills.Clear();
+                SkillGapMessage = "Skill gap analysis is temporarily unavailable.";
+                HasSkillGapMessage = true;
+                ShowSkillData = false;
+            });
         }
         finally
         {
@@ -146,12 +155,15 @@ public class UserStatusViewModel : DispatchableObservableObject
 
     public void Refresh()
     {
-        AppliedJobs.Clear();
-        FilteredJobs.Clear();
-        UnderscoredSkills.Clear();
-        SkillGapMissingSkills.Clear();
-        HasSkillGapMessage = false;
-        ShowSkillData = false;
+        UIDispatcher.Enqueue(() =>
+        {
+            AppliedJobs.Clear();
+            FilteredJobs.Clear();
+            UnderscoredSkills.Clear();
+            SkillGapMissingSkills.Clear();
+            HasSkillGapMessage = false;
+            ShowSkillData = false;
+        });
         _ = LoadMatchesAsync();
     }
 

@@ -18,4 +18,34 @@ public static class UIDispatcher
         else
             Queue.TryEnqueue(new DispatcherQueueHandler(action));
     }
+
+    public static Task EnqueueAsync(Action action)
+    {
+        if (Queue is null || Queue.HasThreadAccess)
+        {
+            action();
+            return Task.CompletedTask;
+        }
+
+        var completion = new TaskCompletionSource();
+        var queued = Queue.TryEnqueue(() =>
+        {
+            try
+            {
+                action();
+                completion.SetResult();
+            }
+            catch (Exception exception)
+            {
+                completion.SetException(exception);
+            }
+        });
+
+        if (!queued)
+        {
+            completion.SetException(new InvalidOperationException("Could not enqueue work on the UI dispatcher."));
+        }
+
+        return completion.Task;
+    }
 }

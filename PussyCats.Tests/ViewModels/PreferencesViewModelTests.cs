@@ -17,12 +17,10 @@ public class PreferencesViewModelTests
     public async Task LoadPreferencesAsync_loads_roles_work_mode_and_location()
     {
         preferenceService.GetByUserIdAsync(3, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<Preference>>(
-            [
-                new() { PreferenceType = "JobRole", Value = nameof(JobRole.BackendDeveloper) },
-                new() { PreferenceType = "WorkMode", Value = nameof(WorkMode.Remote) },
-                new() { PreferenceType = "Location", Value = "Cluj-Napoca" },
-            ]));
+            .Returns(Task.FromResult(new UserPreferences(
+                [JobRole.BackendDeveloper],
+                WorkMode.Remote,
+                "Cluj-Napoca")));
         var viewModel = new PreferencesViewModel(preferenceService, session);
 
         await viewModel.LoadPreferencesAsync();

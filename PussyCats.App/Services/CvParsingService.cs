@@ -1,7 +1,5 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
-using System.Xml.Serialization;
 using PussyCats.Library.Domain;
 
 namespace PussyCats.App.Services;
@@ -9,9 +7,8 @@ namespace PussyCats.App.Services;
 public class CvParsingService : ICvParsingService
 {
     private const string JsonExtension = ".json";
-    private const string XmlExtension = ".xml";
     private const string ParseErrorMessage = "Failed to parse CV file: ";
-    private const string UnsupportedTypeMessage = "Unsupported file type. Only JSON and XML are supported.";
+    private const string UnsupportedTypeMessage = "Unsupported file type. Only JSON is supported.";
 
     private const int MaxSkills = 30;
     private const int MaxSkillLength = 60;
@@ -49,18 +46,6 @@ public class CvParsingService : ICvParsingService
                 {
                     PropertyNameCaseInsensitive = true
                 });
-
-                return MapCvDataToUser(cvData);
-            }
-
-            if (string.Equals(fileType, XmlExtension, StringComparison.OrdinalIgnoreCase))
-            {
-                var xmlDocument = XDocument.Parse(content);
-                var rootName = xmlDocument.Root?.Name.LocalName ?? "CvData";
-
-                using var reader = new StringReader(content);
-                var serializer = new XmlSerializer(typeof(CvData), new XmlRootAttribute(rootName));
-                var cvData = (CvData)serializer.Deserialize(reader)!;
 
                 return MapCvDataToUser(cvData);
             }

@@ -30,18 +30,24 @@ public class UserStatusService : IUserStatusService
     {
         var matches = await matchRepository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
         var userSkills = await userSkillService.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
+        var jobsById = (await jobService.GetAllAsync(cancellationToken).ConfigureAwait(false))
+            .ToDictionary(job => job.JobId);
+        var companiesById = (await companyService.GetAllAsync(cancellationToken).ConfigureAwait(false))
+            .ToDictionary(company => company.CompanyId);
+        var jobSkillsByJobId = (await jobSkillService.GetAllAsync(cancellationToken).ConfigureAwait(false))
+            .GroupBy(jobSkill => jobSkill.JobId)
+            .ToDictionary(group => group.Key, group => (IReadOnlyList<JobSkill>)group.ToList());
         var result = new List<ApplicationCardModel>();
 
         foreach (var match in matches)
         {
-            var matchedJob = await jobService.GetByIdAsync(match.JobId, cancellationToken).ConfigureAwait(false);
-            if (matchedJob is null)
+            if (!jobsById.TryGetValue(match.JobId, out var matchedJob))
             {
                 continue;
             }
 
-            var company = await companyService.GetByIdAsync(matchedJob.CompanyId, cancellationToken).ConfigureAwait(false);
-            var jobSkills = await jobSkillService.GetByJobIdAsync(match.JobId, cancellationToken).ConfigureAwait(false);
+            companiesById.TryGetValue(matchedJob.CompanyId, out var company);
+            var jobSkills = jobSkillsByJobId.GetValueOrDefault(match.JobId) ?? [];
             var score = CalculateCompatibilityScore(userSkills, jobSkills);
 
             result.Add(new ApplicationCardModel

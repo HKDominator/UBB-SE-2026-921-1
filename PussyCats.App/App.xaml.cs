@@ -72,7 +72,6 @@ public partial class App : Application
         RegisterRepositoryProxy<ISkillGroupRepository, SkillGroupRepositoryProxy>(services, apiConfiguration);
         RegisterRepositoryProxy<ISkillTestRepository, SkillTestRepositoryProxy>(services, apiConfiguration);
         RegisterRepositoryProxy<IPersonalityTestRepository, PersonalityTestRepositoryProxy>(services, apiConfiguration);
-        RegisterRepositoryProxy<IQuestionRepository, QuestionRepositoryProxy>(services, apiConfiguration);
         RegisterRepositoryProxy<IRecommendationRepository, RecommendationRepositoryProxy>(services, apiConfiguration);
 
         services.AddTransient<ICompanyRecommendationService, CompanyRecommendationService>();

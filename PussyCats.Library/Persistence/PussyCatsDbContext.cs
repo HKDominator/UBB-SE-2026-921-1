@@ -17,7 +17,6 @@ public class PussyCatsDbContext : DbContext
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<PersonalityTestResult> PersonalityTestResults => Set<PersonalityTestResult>();
-    public DbSet<Question> Questions => Set<Question>();
     public DbSet<SkillGroup> SkillGroups => Set<SkillGroup>();
     public DbSet<Recommendation> Recommendations => Set<Recommendation>();
     public DbSet<SkillTest> SkillTests => Set<SkillTest>();

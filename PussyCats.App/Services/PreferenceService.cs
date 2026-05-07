@@ -7,9 +7,6 @@ namespace PussyCats.App.Services;
 
 public class PreferenceService : IPreferenceService
 {
-    private const string PreferenceTypeJobRole = "JobRole";
-    private const string PreferenceTypeWorkMode = "WorkMode";
-    private const string PreferenceTypeLocation = "Location";
     private const int MinimumPreferredRoles = 1;
     private const int MaximumPreferredRoles = 3;
 
@@ -20,50 +17,28 @@ public class PreferenceService : IPreferenceService
         this.userRepository = userRepository;
     }
 
-    public async Task<IReadOnlyList<Preference>> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
+    public async Task<UserPreferences> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
         var user = await userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
-        var preferences = new List<Preference>();
-
         if (user is null)
         {
-            return preferences;
+            return new UserPreferences([], default, string.Empty);
         }
 
-        if (!string.IsNullOrWhiteSpace(user.PreferredEmploymentType))
+        var roles = new List<JobRole>();
+        foreach (var role in user.PreferredEmploymentType.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
-            foreach (var role in user.PreferredEmploymentType.Split(',', StringSplitOptions.RemoveEmptyEntries))
+            if (Enum.TryParse<JobRole>(role, out var parsedRole))
             {
-                preferences.Add(new Preference
-                {
-                    UserId = userId,
-                    PreferenceType = PreferenceTypeJobRole,
-                    Value = role.Trim(),
-                });
+                roles.Add(parsedRole);
             }
         }
 
-        if (!string.IsNullOrWhiteSpace(user.WorkModePreference))
-        {
-            preferences.Add(new Preference
-            {
-                UserId = userId,
-                PreferenceType = PreferenceTypeWorkMode,
-                Value = user.WorkModePreference,
-            });
-        }
+        var workMode = Enum.TryParse<WorkMode>(user.WorkModePreference, out var parsedWorkMode)
+            ? parsedWorkMode
+            : default;
 
-        if (!string.IsNullOrWhiteSpace(user.LocationPreference))
-        {
-            preferences.Add(new Preference
-            {
-                UserId = userId,
-                PreferenceType = PreferenceTypeLocation,
-                Value = user.LocationPreference,
-            });
-        }
-
-        return preferences;
+        return new UserPreferences(roles, workMode, user.LocationPreference);
     }
 
     public async Task SavePreferencesAsync(int userId, IReadOnlyList<JobRole> roles, WorkMode workMode, string location, CancellationToken cancellationToken = default)

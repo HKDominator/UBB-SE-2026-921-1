@@ -13,6 +13,7 @@ using PussyCats.Library.Repositories.Users;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
 
 builder.Services.AddControllers(options =>
     {
@@ -41,7 +42,6 @@ builder.Services.AddScoped<IUserSkillRepository, UserSkillRepository>();
 builder.Services.AddScoped<ISkillGroupRepository, SkillGroupRepository>();
 builder.Services.AddScoped<ISkillTestRepository, SkillTestRepository>();
 builder.Services.AddScoped<IPersonalityTestRepository, PersonalityTestRepository>();
-builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 builder.Services.AddScoped<IRecommendationRepository, RecommendationRepository>();
 
 var app = builder.Build();

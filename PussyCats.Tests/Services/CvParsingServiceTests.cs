@@ -122,12 +122,11 @@ public class CvParsingServiceTests
         act.Should().Throw<Exception>().WithMessage("*Failed to parse CV file*");
     }
 
-    [Fact(Skip = "CvData uses DateTimeOffset which XmlSerializer rejects (TypeDesc.CheckSupported). Production XML path is broken on the same limitation; flag as open item.")]
-    public void ParseCvFile_parses_valid_xml()
+    [Fact]
+    public void ParseCvFile_throws_for_xml()
     {
-        // Documents an open item: CvParsingService accepts .xml but XmlSerializer
-        // can't serialize DateTimeOffset. Real XML uploads would throw before any
-        // user.* fields could be inspected. Either swap to DateTime + XmlIgnore on
-        // DateTimeOffset, or drop the XML branch in Phase 8.
+        Action act = () => service.ParseCvFile("<CvData />", ".xml");
+
+        act.Should().Throw<Exception>().WithMessage("*Only JSON is supported*");
     }
 }

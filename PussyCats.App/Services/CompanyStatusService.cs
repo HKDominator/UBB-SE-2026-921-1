@@ -96,21 +96,39 @@ public class CompanyStatusService : ICompanyStatusService
 
         var averageSkillScore = ComputeAverageSkillScore(userSkills);
 
-        // TODO (Phase 6): User.City may not match Job.Location formats. User.City
-        // stores bare city names ("Bucharest") while Job.Location may include
-        // country ("Bucharest, Romania") depending on how the company entered
-        // it — equality returns false even when the locations are the same place.
-        // Original matchmaking code compared User.Location vs Job.Location, both
-        // single-column city strings; merged User has no Location property so
-        // User.City is the closest substitute. Add format normalization here
-        // before relying on locationBonus for ranking.
-        var locationBonus = user.City.Equals(job.Location, StringComparison.OrdinalIgnoreCase) ? 10 : 0;
+        var locationBonus = LocationsReferToSameCity(user.City, job.Location) ? 10 : 0;
         var employmentTypeBonus = user.PreferredEmploymentType.Equals(job.EmploymentType, StringComparison.OrdinalIgnoreCase)
             ? 10
             : 0;
 
         var computed = averageSkillScore + locationBonus + employmentTypeBonus;
         return computed > 100 ? 100 : computed;
+    }
+
+    private static bool LocationsReferToSameCity(string userCity, string jobLocation)
+    {
+        var normalizedCity = NormalizeLocationToken(userCity);
+        if (normalizedCity.Length == 0)
+        {
+            return false;
+        }
+
+        foreach (var token in jobLocation.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (NormalizeLocationToken(token) == normalizedCity)
+            {
+                return true;
+            }
+        }
+
+        return NormalizeLocationToken(jobLocation) == normalizedCity;
+    }
+
+    private static string NormalizeLocationToken(string value)
+    {
+        return string.Join(
+            ' ',
+            value.Trim().ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries));
     }
 
     private static bool IsVisibleMatch(Match match)

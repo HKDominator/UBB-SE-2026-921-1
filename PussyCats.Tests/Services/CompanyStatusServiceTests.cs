@@ -90,10 +90,8 @@ public class CompanyStatusServiceTests
     }
 
     [Fact]
-    public async Task GetApplicantsForCompanyAsync_demonstrates_city_location_format_mismatch_open_item()
+    public async Task GetApplicantsForCompanyAsync_applies_location_bonus_when_job_location_includes_country()
     {
-        // OPEN ITEM: User.City "Bucharest" doesn't match Job.Location "Bucharest, Romania" — locationBonus is 0
-        // even though the user is in the same city. Phase 6 should normalize.
         userRepo.Seed(new UserBuilder().WithId(1).WithCity("Bucharest").Build());
         jobRepo.Seed(new JobBuilder().WithId(10).WithCompanyId(5).WithLocation("Bucharest, Romania").Build());
         userSkillRepo.Seed(new UserSkill { UserId = 1, SkillId = 1, Score = 50 });
@@ -101,8 +99,7 @@ public class CompanyStatusServiceTests
 
         var result = await service.GetApplicantsForCompanyAsync(5);
 
-        // No location bonus despite being the same city — bug to fix in Phase 6
-        result[0].CompatibilityScore.Should().Be(50);
+        result[0].CompatibilityScore.Should().Be(60);
     }
 
     [Fact]

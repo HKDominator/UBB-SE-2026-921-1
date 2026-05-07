@@ -123,10 +123,9 @@ Key decisions during 3a:
 - `IJobSkillRepository.GetAllAsync` added to support
   `JobSkillService.GetAllAsync`.
 - `CompanyStatusService.ComputeCompatibilityFallback` substitutes
-  `User.City` for the missing `User.Location`. **Comment in the
-  source flags that this comparison can produce false negatives
-  because `User.City` stores bare city names while `Job.Location`
-  may include country.** Phase 6 should normalize.
+  `User.City` for the missing `User.Location`. Phase 8d normalizes
+  the city portion of comma-separated job locations such as
+  `Bucharest, Romania`.
 - `CompanyRecommendationService` is stateful (queue + currentIndex).
   Comment at the top of the class flags that **DI registration must
   be Transient or per-view-model** in Phase 5 to avoid leaking
@@ -1322,7 +1321,7 @@ Each landed as `Tests/Services/<Name>ServiceTests.cs`:
 - `UserStatusServiceTests`
 - `CompanyStatusServiceTests` — exercise the
   `ComputeCompatibilityFallback` `User.City` vs `Job.Location` fallback path
-  explicitly (open-item flagged).
+  explicitly.
 - `SkillGapServiceTests`
 - `JobSkillServiceTests`
 - `SkillServiceTests` (matchmaking version) — confirm catalog reads still pass.
@@ -1388,7 +1387,7 @@ New test files (24 in `PussyCats.Tests/Services/`):
 - `PreferenceServiceTests` — User-fields-as-Preference translation, role count validation,
   PredefinedLocations search.
 - `UserStatusServiceTests`, `CompanyStatusServiceTests` — application card composition,
-  decided-matches filter, City-vs-Location format mismatch open-item asserted explicitly.
+  decided-matches filter, City-vs-Location format normalization asserted explicitly.
 - `CompanyRecommendationServiceTests` — queue advancement, sort by score, transient-lifetime smoke
   (two instances, no shared state), GetBreakdownAsync algorithm delegation.
 - `UserRecommendationServiceTests` — top-card scoring, cooldown skip, ApplyLike/Dismiss, Undo paths,
@@ -1738,6 +1737,15 @@ which cleared the final `NETSDK1198` build warning. Added
 manual clean-machine walkthrough. Tagging/pushing `v4.0` is still pending
 explicit release approval.
 
+*8d issue pass progress summary (pending commit).* Fixed
+`CompanyStatusService.ComputeCompatibilityFallback` so `User.City` matches
+the city portion of a `Job.Location` value such as `Bucharest, Romania`.
+`CompanyStatusServiceTests` now asserts the location bonus for that merged
+format instead of documenting it as an open-item failure. Pruned resolved
+open-item notes for recommendation-service DI, the dropped `Questions` table,
+`UserStatusService` N+1 loading, the legacy `Preference` DTO, and domain
+back-navigation JSON cycles.
+
 ---
 
 *Out of scope (intentionally not in Phase 8):*
@@ -1749,8 +1757,7 @@ explicit release approval.
 
 ## Open items / known issues
 
-These are flagged in code or in conversation but haven't been
-resolved yet:
+Remaining deliberate deviations and known issues:
 
 - **Skill-test runner UI is a placeholder.** `SkillTestCardViewModel.RetakeAsync`
   rolls `Random.Shared.Next(0, 101)` and submits that as the new score —
@@ -1758,19 +1765,6 @@ resolved yet:
   score update, XP recalc) is real; only the test-runner is fake. Stays
   fake. The 3-month `RetakeEligibilityMonths` cooldown is intentional;
   the button greying out immediately after a retake is by design, not a bug.
-- `CompanyStatusService.ComputeCompatibilityFallback`: `User.City`
-  vs `Job.Location` format mismatch produces silent false
-  negatives. TODO in source.
-- `CompanyRecommendationService` and `UserRecommendationService`
-  cannot be DI-registered until 3b ports the
-  `RecommendationAlgorithm` class from `matchmaking/algorithm/`.
-- The empty `Questions` table from Phase 2 is dead weight — the
-  questions live in `PersonalityTestService` per
-  `MergePlan §4`. Drop in Phase 8.
-- `UserStatusService` and similar services have an N+1 query
-  pattern (one repository call per match in a loop). Preserved from
-  matchmaking originals. Phase 6 demo will surface real
-  performance issues if they exist.
 - The CV parser caps `Motivation` at 1000 chars; the DB column caps
   at 2000. Intentional — parser is the friendly cap, DB is the
   safety net.
@@ -1778,13 +1772,6 @@ resolved yet:
   CodingStyle §6 strictly speaking (interfaces with implementations
   in App rather than Library), but the algorithm uses Library
   domain types so moving it later is trivial.
-- `Preference` DTO in `Library/DTOs/` exists only to preserve
-  `IPreferenceService.GetByUserIdAsync`'s legacy return shape. The
-  service translates User fields into `Preference` objects on the way
-  out and parses them back on the way in. Slated for replacement when
-  view models migrate in Phase 5 — consider a flat `UserPreferences`
-  record instead.
-
 - `UserProfileService.RecalculateLevelAsync` now uses
   `SimpleModelOperations.GetExperiencePoints` and `CalculateLevelNumber`
   (resolved in 3b.2).
@@ -1796,21 +1783,6 @@ resolved yet:
   future callers use `SimpleModelOperations.GetExperiencePoints`
   directly.
 
-- **Circular back-navigation properties on domain entities.** Every
-  child entity has a back-nav property to its parent (e.g.
-  `WorkExperience.User`, `Match.User`, `Match.Job`, `UserSkill.User`,
-  `JobSkill.Job`, likely also `Project.User`, `Document.User`,
-  `SkillTest.User`, `PersonalityTestResult.User`, etc.). The API
-  outbound side is currently covered by `ReferenceHandler.IgnoreCycles`
-  in Program.cs. The proxy outbound side (POST/PUT from App to API) is
-  not — if a VM ever manually wires back-navigation before calling save,
-  `PostAsJsonAsync` will throw a JsonException. The correct fix is
-  `[JsonIgnore]` on all back-navigation properties in Library; EF
-  ignores JSON attributes so queries are unaffected. Once that lands,
-  `ReferenceHandler.IgnoreCycles` in Program.cs can be removed (though
-  it's harmless to keep). **Planned for Phase 5b** (Library change that
-  the proxies should rely on being in place).
-
 - `CompletenessService` case 18 deviation: original checked
   `PreferredJobRoles` (a `List<string>` on `UserProfile`). Merged
   `User` has no `PreferredJobRoles`; case 18 now checks
@@ -1818,11 +1790,6 @@ resolved yet:
   field is "filled" only after the personality test is completed and
   a role is selected, not just because a list is non-empty. Comment
   in source documents this.
-
-- `ImageStorageService.CheckFileSize` is `public` but not on
-  `IImageStorageService`. Preserved verbatim from the original.
-  Consumers injecting the interface cannot call it. Slated for cleanup
-  in Phase 8.
 
 - `MatchService.GetPositionKey` returns display labels for
   `MatchesPerPosition`. Original PussyCatsApp stored arbitrary strings;

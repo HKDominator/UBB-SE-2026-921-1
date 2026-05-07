@@ -41,9 +41,11 @@ public class CompanyStatusViewModelTests
     public async Task LoadApplicationsAsync_DataExistsInRepo_PopulatesApplicationsAndPageMessage()
     {
         var companyId = 4;
-        var jobId = 10;
-        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
-        matchRepo.Seed(new MatchBuilder().WithId(1).AppliedFor(1, jobId).WithStatus(MatchStatus.Applied).Build());
+        var applicant = ViewModelTestData.Applicant(matchId: 7, companyId: companyId, status: MatchStatus.Advanced);
+
+        userRepo.Seed(applicant.User);
+        jobRepo.Seed(applicant.Job);
+        matchRepo.Seed(applicant.Match);
 
         await viewModel.LoadApplicationsAsync();
 
@@ -57,14 +59,11 @@ public class CompanyStatusViewModelTests
     {
         var matchId = 12;
         var companyId = 4;
-        var jobId = 30;
+        var applicant = ViewModelTestData.Applicant(matchId: matchId, companyId: companyId, status: MatchStatus.Accepted);
 
-        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
-        matchRepo.Seed(new MatchBuilder()
-            .WithId(matchId)
-            .AppliedFor(12, jobId)
-            .WithStatus(MatchStatus.Accepted)
-            .Build());
+        userRepo.Seed(applicant.User);
+        jobRepo.Seed(applicant.Job);
+        matchRepo.Seed(applicant.Match);
 
         var loaded = await viewModel.LoadEvaluationAsync(matchId);
 
@@ -89,16 +88,13 @@ public class CompanyStatusViewModelTests
     [Fact]
     public async Task SubmitDecisionAsync_ValidSubmission_PersistsDecisionInRepositoryAndRefreshesList()
     {
-        var matchId = 12;
+        var matchId = 15;
         var companyId = 4;
-        var jobId = 30;
+        var applicant = ViewModelTestData.Applicant(matchId: matchId, companyId: companyId, status: MatchStatus.Advanced);
 
-        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
-        matchRepo.Seed(new MatchBuilder()
-            .WithId(matchId)
-            .AppliedFor(1, jobId)
-            .WithStatus(MatchStatus.Applied)
-            .Build());
+        userRepo.Seed(applicant.User);
+        jobRepo.Seed(applicant.Job);
+        matchRepo.Seed(applicant.Match);
 
         await viewModel.LoadEvaluationAsync(matchId);
         viewModel.SelectedDecision = MatchStatus.Rejected;

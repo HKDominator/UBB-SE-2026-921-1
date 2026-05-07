@@ -2,7 +2,7 @@ using PussyCats.Library.Domain;
 using PussyCats.Library.Domain.Enums;
 using PussyCats.Library.DTOs;
 
-namespace PussyCats.Tests.ViewModels;
+namespace PussyCats.Tests.Integration;
 
 internal static class ViewModelTestData
 {

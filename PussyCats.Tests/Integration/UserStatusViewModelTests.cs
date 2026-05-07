@@ -6,7 +6,7 @@ using PussyCats.App.ViewModels;
 using PussyCats.Library.Domain.Enums;
 using PussyCats.Library.DTOs;
 
-namespace PussyCats.Tests.ViewModels;
+namespace PussyCats.Tests.Integration;
 
 public class UserStatusViewModelTests
 {

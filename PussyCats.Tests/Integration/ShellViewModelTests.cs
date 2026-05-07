@@ -3,7 +3,7 @@ using PussyCats.App.Configuration;
 using PussyCats.App.ViewModels;
 using PussyCats.Library.Domain.Enums;
 
-namespace PussyCats.Tests.ViewModels;
+namespace PussyCats.Tests.Integration;
 
 public class ShellViewModelTests
 {

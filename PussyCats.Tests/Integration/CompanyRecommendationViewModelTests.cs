@@ -7,7 +7,7 @@ using PussyCats.Library.Domain;
 using PussyCats.Library.Domain.Enums;
 using PussyCats.Library.DTOs;
 
-namespace PussyCats.Tests.ViewModels;
+namespace PussyCats.Tests.Integration;
 
 public class CompanyRecommendationViewModelTests
 {
@@ -16,7 +16,7 @@ public class CompanyRecommendationViewModelTests
     private readonly SessionContext session = new() { CompanyId = 4, Mode = AppMode.Company };
 
     [Fact]
-    public async Task LoadApplicantsAsync_loads_current_applicant()
+    public async Task LoadApplicantsAsync_CompanyModeActive_LoadsCurrentApplicant()
     {
         var applicant = ViewModelTestData.Applicant(companyId: 4);
         recommendationService.GetNextApplicant().Returns(applicant);
@@ -31,7 +31,7 @@ public class CompanyRecommendationViewModelTests
     }
 
     [Fact]
-    public async Task LoadApplicantsAsync_reports_when_company_mode_inactive()
+    public async Task LoadApplicantsAsync_ModeIsCandidate_ReportsCompanyModeInactive()
     {
         session.Mode = AppMode.Candidate;
         var viewModel = new CompanyRecommendationViewModel(recommendationService, matchService, session);
@@ -43,7 +43,7 @@ public class CompanyRecommendationViewModelTests
     }
 
     [Fact]
-    public async Task AdvanceApplicantAsync_advances_current_applicant_and_stores_undo()
+    public async Task AdvanceApplicantAsync_ValidApplicantExists_AdvancesCurrentApplicantAndStoresUndoState()
     {
         var applicant = ViewModelTestData.Applicant(matchId: 8, companyId: 4);
         recommendationService.GetNextApplicant().Returns(applicant, (UserApplicationResult?)null);
@@ -62,7 +62,7 @@ public class CompanyRecommendationViewModelTests
     }
 
     [Fact]
-    public async Task UndoLastActionAsync_reverts_match_and_restores_applicant()
+    public async Task UndoLastActionAsync_ActionStored_RevertsMatchAndRestoresApplicant()
     {
         var applicant = ViewModelTestData.Applicant(matchId: 8, companyId: 4);
         recommendationService.GetNextApplicant().Returns(applicant, (UserApplicationResult?)null);
@@ -81,7 +81,7 @@ public class CompanyRecommendationViewModelTests
     }
 
     [Fact]
-    public async Task ExpandCardAsync_loads_breakdown_and_marks_card_expanded()
+    public async Task ExpandCardAsync_ApplicantSelected_LoadsBreakdownAndMarksCardExpanded()
     {
         var applicant = ViewModelTestData.Applicant(companyId: 4);
         var breakdown = new CompatibilityBreakdown { OverallScore = 81 };

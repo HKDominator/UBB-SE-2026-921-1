@@ -3,7 +3,7 @@ using FluentAssertions;
 using PussyCats.App.Configuration;
 using PussyCats.App.ViewModels;
 
-namespace PussyCats.Tests.ViewModels;
+namespace PussyCats.Tests.Integration;
 
 public class DispatchableObservableObjectTests
 {

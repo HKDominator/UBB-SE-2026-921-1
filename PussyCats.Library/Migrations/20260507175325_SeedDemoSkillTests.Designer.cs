@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PussyCats.Library.Persistence;
 
@@ -11,9 +12,11 @@ using PussyCats.Library.Persistence;
 namespace PussyCats.Library.Migrations
 {
     [DbContext(typeof(PussyCatsDbContext))]
-    partial class PussyCatsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260507175325_SeedDemoSkillTests")]
+    partial class SeedDemoSkillTests
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -418,6 +421,34 @@ namespace PussyCats.Library.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Projects", (string)null);
+                });
+
+            modelBuilder.Entity("PussyCats.Library.Domain.Question", b =>
+                {
+                    b.Property<int>("QuestionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QuestionId"));
+
+                    b.Property<string>("QuestionText")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Trait")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.HasKey("QuestionId");
+
+                    b.HasIndex("SortOrder");
+
+                    b.ToTable("Questions", (string)null);
                 });
 
             modelBuilder.Entity("PussyCats.Library.Domain.Recommendation", b =>

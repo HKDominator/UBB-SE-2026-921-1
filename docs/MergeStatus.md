@@ -1860,3 +1860,4 @@ resolved yet:
 7. `PussyCats.App/Services/` — current service ports. Read
    `MatchService` first because the state machine is the
    highest-stakes piece of preserved business logic in the codebase.
+

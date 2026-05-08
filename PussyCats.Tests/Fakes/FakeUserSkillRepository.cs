@@ -23,14 +23,14 @@ public class FakeUserSkillRepository : IUserSkillRepository
 
     public Task<IReadOnlyList<UserSkill>> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
-        IReadOnlyList<UserSkill> filtered = store.Values.Where(s => s.UserId == userId).ToList();
+        IReadOnlyList<UserSkill> filtered = store.Values.Where(userSkill => userSkill.UserId == userId).ToList();
         return Task.FromResult(filtered);
     }
 
     public Task<IReadOnlyList<UserSkill>> GetVerifiedByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
         IReadOnlyList<UserSkill> filtered = store.Values
-            .Where(s => s.UserId == userId && s.IsVerified && s.AchievedDate != null)
+            .Where(userSkill => userSkill.UserId == userId && userSkill.IsVerified && userSkill.AchievedDate != null)
             .ToList();
         return Task.FromResult(filtered);
     }

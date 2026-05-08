@@ -30,8 +30,8 @@ public class FakeRecommendationRepository : IRecommendationRepository
     public Task<Recommendation?> GetLatestByUserIdAndJobIdAsync(int userId, int jobId, CancellationToken cancellationToken = default)
     {
         var latest = store.Values
-            .Where(r => r.UserId == userId && r.JobId == jobId)
-            .OrderByDescending(r => r.Timestamp)
+            .Where(recommendation => recommendation.UserId == userId && recommendation.JobId == jobId)
+            .OrderByDescending(recommendation => recommendation.Timestamp)
             .FirstOrDefault();
         return Task.FromResult(latest);
     }

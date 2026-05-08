@@ -17,7 +17,7 @@ public class FakePersonalityTestRepository : IPersonalityTestRepository
 
     public Task<PersonalityTestResult?> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
-        var result = store.Values.FirstOrDefault(r => r.UserId == userId);
+        var result = store.Values.FirstOrDefault(personalityTestResult => personalityTestResult.UserId == userId);
         return Task.FromResult(result);
     }
 

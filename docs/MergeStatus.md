@@ -1807,7 +1807,7 @@ Remaining deliberate deviations and known issues:
 
 ## Working norms (carried from earlier sessions)
 
-- One phase per Claude Code session. Fresh context each time.
+- One phase per session. Fresh context each time.
 - Commit at every phase boundary. Small commits over big ones.
 - For service-layer work: consult original repos for state machines
   and constants. Preserve verbatim. Flag deviations.

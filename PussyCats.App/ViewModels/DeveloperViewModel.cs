@@ -113,11 +113,11 @@ public class DeveloperViewModel : DispatchableObservableObject
         foreach (var post in posts)
         {
             var postInteractions = interactions.Where(interaction => interaction.DeveloperPostId == post.DeveloperPostId).ToList();
-            var developer = developerService.GetDeveloperById(post.DeveloperId);
+            var developer = developerService.GetDeveloperById(post.Developer.DeveloperId);
             Posts.Add(new DeveloperFeedPostCardViewModel(
                 post,
                 postInteractions,
-                developer?.Name ?? $"Developer {post.DeveloperId}",
+                developer?.Name ?? $"Developer {post.Developer.DeveloperId}",
                 currentDeveloperId,
                 ToggleLike,
                 ToggleDislike));

@@ -112,7 +112,7 @@ public sealed class ChatService : IChatService
         EnsureParticipant(chat, callerId);
         var deletedAt = chat.UserId == callerId ? chat.DeletedAtByUser : chat.DeletedAtBySecondParty;
         return messages
-            .Where(message => message.ChatId == chatId)
+            .Where(message => message.Chat.ChatId == chatId)
             .Where(message => deletedAt is null || message.Timestamp > deletedAt)
             .OrderBy(message => message.Timestamp)
             .Select(message => CloneMessage(message, callerId))
@@ -185,7 +185,7 @@ public sealed class ChatService : IChatService
         messages.Add(new Message
         {
             MessageId = nextMessageId++,
-            ChatId = chatId,
+            Chat = new Chat { ChatId = chatId },
             SenderId = senderId,
             Content = content.Trim(),
             Timestamp = DateTime.UtcNow,
@@ -198,7 +198,7 @@ public sealed class ChatService : IChatService
         await EnsureSeededAsync(cancellationToken).ConfigureAwait(false);
         var chat = FindChat(chatId);
         EnsureParticipant(chat, readerId);
-        foreach (var message in messages.Where(message => message.ChatId == chatId && message.SenderId != readerId))
+        foreach (var message in messages.Where(message => message.Chat.ChatId == chatId && message.SenderId != readerId))
         {
             message.IsRead = true;
         }
@@ -305,7 +305,7 @@ public sealed class ChatService : IChatService
         messages.Add(new Message
         {
             MessageId = nextMessageId++,
-            ChatId = chatId,
+            Chat = new Chat { ChatId = chatId },
             SenderId = senderId,
             Content = content,
             Timestamp = DateTime.UtcNow.AddHours(hoursOffset),
@@ -342,7 +342,7 @@ public sealed class ChatService : IChatService
     private DateTime ResolveLatestMessageTime(Chat chat)
     {
         return messages
-            .Where(message => message.ChatId == chat.ChatId)
+            .Where(message => message.Chat.ChatId == chat.ChatId)
             .Select(message => message.Timestamp)
             .DefaultIfEmpty(DateTime.MinValue)
             .Max();
@@ -365,7 +365,7 @@ public sealed class ChatService : IChatService
         };
 
         var chatMessages = messages
-            .Where(message => message.ChatId == chat.ChatId)
+            .Where(message => message.Chat.ChatId == chat.ChatId)
             .OrderBy(message => message.Timestamp)
             .ToList();
         var lastMessage = chatMessages.LastOrDefault();
@@ -388,7 +388,7 @@ public sealed class ChatService : IChatService
         return new Message
         {
             MessageId = message.MessageId,
-            ChatId = message.ChatId,
+            Chat = message.Chat,
             SenderId = message.SenderId,
             Content = message.Content,
             Timestamp = message.Timestamp,

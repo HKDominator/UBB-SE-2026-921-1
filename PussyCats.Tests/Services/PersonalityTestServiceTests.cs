@@ -110,7 +110,7 @@ public class PersonalityTestServiceTests
         var saved = await repo.GetByUserIdAsync(1);
         saved.Should().NotBeNull();
         saved!.SelectedRole.Should().Be(JobRole.BackendDeveloper);
-        saved.UserId.Should().Be(1);
+        saved.User.UserId.Should().Be(1);
         saved.TraitScores.Should().Contain(personalityTraitScore => personalityTraitScore.Trait == TraitType.Depth && personalityTraitScore.Score == 5);
     }
 

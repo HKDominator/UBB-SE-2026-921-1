@@ -164,7 +164,7 @@ public class RecommendationAlgorithmTests
     {
         return new UserSkill
         {
-            SkillId = skillId,
+            User = new User { UserId = 1 },
             Score = score,
             Skill = new Skill { SkillId = skillId, Name = name },
         };

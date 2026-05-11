@@ -32,7 +32,7 @@ public class SkillGapService : ISkillGapService
         var userSkillIds = new HashSet<int>();
         foreach (var userSkill in await userSkillService.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false))
         {
-            userSkillIds.Add(userSkill.SkillId);
+            userSkillIds.Add(userSkill.Skill.SkillId);
         }
 
         var missingCount = new Dictionary<string, int>();
@@ -74,7 +74,7 @@ public class SkillGapService : ISkillGapService
         var userSkillMap = new Dictionary<int, UserSkill>();
         foreach (var userSkill in await userSkillService.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false))
         {
-            userSkillMap[userSkill.SkillId] = userSkill;
+            userSkillMap[userSkill.Skill.SkillId] = userSkill;
         }
 
         var requiredScoresPerSkill = new Dictionary<int, (string Name, int UserScore, List<int> RequiredScores)>();

@@ -183,7 +183,7 @@ public class ChatViewModel : DispatchableObservableObject
             await chatService.MarkMessagesAsReadAsync(SelectedChat.ChatId, callerId);
             foreach (var message in messages)
             {
-                Messages.Add(new MessageDisplayViewModel(message, message.SenderId == callerId));
+                Messages.Add(new MessageDisplayViewModel(message, message.Sender.UserId == callerId));
             }
         });
     }

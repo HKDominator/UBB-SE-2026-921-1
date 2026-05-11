@@ -186,7 +186,7 @@ public sealed class ChatService : IChatService
         {
             MessageId = nextMessageId++,
             Chat = new Chat { ChatId = chatId },
-            SenderId = senderId,
+            Sender = new User { UserId = senderId },
             Content = content.Trim(),
             Timestamp = DateTime.UtcNow,
             Type = type,
@@ -198,7 +198,7 @@ public sealed class ChatService : IChatService
         await EnsureSeededAsync(cancellationToken).ConfigureAwait(false);
         var chat = FindChat(chatId);
         EnsureParticipant(chat, readerId);
-        foreach (var message in messages.Where(message => message.Chat.ChatId == chatId && message.SenderId != readerId))
+        foreach (var message in messages.Where(message => message.Chat.ChatId == chatId && message.Sender.UserId != readerId))
         {
             message.IsRead = true;
         }
@@ -306,7 +306,7 @@ public sealed class ChatService : IChatService
         {
             MessageId = nextMessageId++,
             Chat = new Chat { ChatId = chatId },
-            SenderId = senderId,
+            Sender = new User { UserId = senderId },
             Content = content,
             Timestamp = DateTime.UtcNow.AddHours(hoursOffset),
             Type = MessageType.Text,
@@ -379,7 +379,7 @@ public sealed class ChatService : IChatService
         clone.LastMessageTime = lastMessage.Timestamp.ToLocalTime().Date == DateTime.Now.Date
             ? lastMessage.Timestamp.ToLocalTime().ToString("HH:mm")
             : lastMessage.Timestamp.ToLocalTime().ToString("dd MMM");
-        clone.UnreadCount = chatMessages.Count(message => message.SenderId != callerId && !message.IsRead);
+        clone.UnreadCount = chatMessages.Count(message => message.Sender.UserId != callerId && !message.IsRead);
         return clone;
     }
 
@@ -389,13 +389,13 @@ public sealed class ChatService : IChatService
         {
             MessageId = message.MessageId,
             Chat = message.Chat,
-            SenderId = message.SenderId,
+            Sender = message.Sender,
             Content = message.Content,
             Timestamp = message.Timestamp,
             Type = message.Type,
             IsRead = message.IsRead,
-            ShowReadReceipt = message.SenderId == callerId,
-            SenderInitials = message.SenderId == callerId ? "Me" : "Them",
+            ShowReadReceipt = message.Sender.UserId == callerId,
+            SenderInitials = message.Sender.UserId == callerId ? "Me" : "Them",
         };
     }
 

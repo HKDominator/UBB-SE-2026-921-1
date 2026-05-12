@@ -172,5 +172,69 @@ namespace PussyCats.Tests.Services
             result.Should().BeEmpty();
         }
 
+        //---------Message tests-----------
+
+        [Fact]
+        public async Task GetMessagesAsync_ChatNotFound_ThrowsKeyNotFoundException()
+        {
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>())
+                .Returns((Chat?)null);
+
+            var action = async () => await chatService.GetMessagesAsync(1, callerId: 1);
+
+            await action.Should().ThrowAsync<KeyNotFoundException>();
+        }
+
+        [Fact]
+        public async Task GetMessagesAsync_CallerIsNotParticipant_ThrowsUnauthorizedAccessException()
+        {
+            var chat = new Chat { User = new User { UserId = 2 }, SecondUser = new User { UserId = 3 } };
+
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>())
+                .Returns(chat);
+
+            var act = async () => await chatService.GetMessagesAsync(1, callerId: 99);
+
+            await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        }
+
+        [Fact]
+        public async Task GetMessagesAsync_CallerHasDeletedAt_ExcludesMessagesBeforeDeletion()
+        {
+            var deletedAt = DateTime.UtcNow;
+            var callerId = 1;
+            var chat = new Chat { User = new User { UserId = callerId }, DeletedAtByUser = deletedAt };
+            var oldMessage = new Message { Timestamp = deletedAt.AddMinutes(-1), Sender = new MessageSender { SenderId = 2 }, Chat = new Chat { ChatId = 1 } };
+            var newMessage = new Message { Timestamp = deletedAt.AddMinutes(1), Sender = new MessageSender { SenderId = 2 }, Chat = new Chat { ChatId = 1 } };
+
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns(chat);
+            messageRepo.GetForChatAsync(1, Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<IReadOnlyList<Message>>(new List<Message> { oldMessage, newMessage }));
+
+            var result = await chatService.GetMessagesAsync(1, callerId);
+
+            result.Should().ContainSingle()
+                .Which.Timestamp.Should().Be(newMessage.Timestamp);
+        }
+
+        [Fact]
+        public async Task GetMessagesAsync_ValidRequest_SetsMessagesMetadataCorrectly()
+        {
+            var callerId = 1;
+            var chat = new Chat { User = new User { UserId = callerId } };
+            var ownMessage = new Message { Sender = new MessageSender { SenderId = callerId }, Chat = new Chat { ChatId = 1 }, Timestamp = DateTime.UtcNow };
+            var otherMessage = new Message { Sender = new MessageSender { SenderId = 2 }, Chat = new Chat { ChatId = 1 }, Timestamp = DateTime.UtcNow };
+
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns(chat);
+            messageRepo.GetForChatAsync(1, Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult<IReadOnlyList<Message>>(new List<Message> { ownMessage, otherMessage }));
+
+            var result = await chatService.GetMessagesAsync(1, callerId);
+
+            result[0].ShowReadReceipt.Should().BeTrue();
+            result[0].SenderInitials.Should().Be("Me");
+            result[1].ShowReadReceipt.Should().BeFalse();
+            result[1].SenderInitials.Should().Be("Them");
+        }
     }
 }

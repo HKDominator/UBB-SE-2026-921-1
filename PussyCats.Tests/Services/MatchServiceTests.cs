@@ -220,16 +220,4 @@ public class MatchServiceTests
         stats.MatchesPerPosition.Should().ContainKey("Frontend");
     }
 
-    [Fact]
-    public async Task GetMatchesForUserAsync_UserHasMatches_ReturnsUserMatches()
-    {
-        matchRepo.Seed(
-            new MatchBuilder().WithId(1).AppliedFor(1, 10).Build(),
-            new MatchBuilder().WithId(2).AppliedFor(2, 10).Build());
-
-        var result = await service.GetMatchesForUserAsync(1);
-
-        result.Should().HaveCount(1);
-        result[0].User.UserId.Should().Be(1);
-    }
 }

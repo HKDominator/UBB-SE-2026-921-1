@@ -126,8 +126,11 @@ public class SkillTestServiceTests
     public void AchievedDateFormatted_ReturnsDateIn_ddMMyyyy_Format()
     {
         string expectedFormattedDate = "12.05.2025";
+        int year = 2025;
+        int month = 5;
+        int day = 12;
 
-        DateOnly achievedDate = new DateOnly(2025, 5, 12);
+        DateOnly achievedDate = new DateOnly(year, month, day);
         var skillTest = new SkillTestBuilder()
             .WithAchievedDate(achievedDate)
             .Build();

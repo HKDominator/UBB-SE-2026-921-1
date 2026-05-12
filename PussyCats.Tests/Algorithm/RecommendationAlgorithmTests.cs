@@ -54,7 +54,7 @@ public class RecommendationAlgorithmTests
 
         double expectedOverallScore = (expectedSkillScore + expectedKeywordScore + expectedPreferenceScore + expectedPromotionScore) / 4;
 
-        score.Should().BeApproximately(expectedOverallScore, 0.0001);
+        score.Should().Be(expectedOverallScore);
     }
 
     [Fact]

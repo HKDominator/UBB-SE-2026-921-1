@@ -77,7 +77,89 @@ public class RecommendationAlgorithmTests
     [Fact]
     public void CalculateScoreBreakdown_ValidInputs_ReturnsCorrectSkillScore()
     {
+        var user = BuildUser(locationPreference: "Cluj-Napoca", employmentType: "Part-time", parsedCv: "csharp sql azure");
+        var job = BuildJob(location: "Cluj-Napoca", employmentType: "Full-time", description: "csharp docker", promotionLevel: 40);
 
+        int firstSkillId = 1, secondSkillId = 2;
+        int firstSkillScore = 80;
+        int firstJobSkillRequiredLevel = 70, secondJobSkillRequiredLevel = 60;
+        double maximumScore = 100;
+        string firstSkillName = "C#", secondSkillName = "Docker";
+
+        var userSkills = new[]
+        {
+            BuildUserSkill(skillId: firstSkillId, score: firstSkillScore, name: firstSkillName),
+        };
+        var jobSkills = new[]
+        {
+            BuildJobSkill(skillId: firstSkillId, requiredLevel: firstJobSkillRequiredLevel, name: firstSkillName),
+            BuildJobSkill(skillId: secondSkillId, requiredLevel: secondJobSkillRequiredLevel, name: secondSkillName),
+        };
+
+        var breakdown = algorithm.CalculateScoreBreakdown(user, job, userSkills, jobSkills);
+
+        double firstSkillDifference = 5; // firstSkillScore - firstJobSkillRequiredLevel / 2 (default mitigationFactor)
+        double secondSkillDifference = secondJobSkillRequiredLevel; // doesn't exist
+
+        double averagePenalty = (firstSkillDifference + secondSkillDifference) / 2;
+        double expectedResult = maximumScore - averagePenalty;
+        breakdown.SkillScore.Should().Be(expectedResult);
+    }
+
+    [Fact]
+    public void CalculateScoreBreakdown_BigPenalty_DoesNotGiveScoreLowerThanMinimumScore()
+    {
+        var user = BuildUser(locationPreference: "Cluj-Napoca", employmentType: "Part-time", parsedCv: "csharp sql azure");
+        var job = BuildJob(location: "Cluj-Napoca", employmentType: "Full-time", description: "csharp docker", promotionLevel: 40);
+
+        int firstSkillId = 1;
+        int firstSkillScore = 10;
+        int firstJobSkillRequiredLevel = 120;
+        double maximumScore = 100;
+        string firstSkillName = "C#", secondSkillName = "Docker";
+
+        var userSkills = new[]
+        {
+            BuildUserSkill(skillId: firstSkillId, score: firstSkillScore, name: firstSkillName),
+        };
+        var jobSkills = new[]
+        {
+            BuildJobSkill(skillId: firstSkillId, requiredLevel: firstJobSkillRequiredLevel, name: firstSkillName),
+        };
+
+        var breakdown = algorithm.CalculateScoreBreakdown(user, job, userSkills, jobSkills);
+
+        double expectedResult = 0; // default minimum score
+        breakdown.SkillScore.Should().Be(expectedResult);
+    }
+
+    [Fact]
+    public void CalculateScoreBreakdown_NoJobSkills_ReturnsZero()
+    {
+        var user = BuildUser(locationPreference: "Cluj-Napoca", employmentType: "Part-time", parsedCv: "csharp sql azure");
+        var job = BuildJob(location: "Cluj-Napoca", employmentType: "Full-time", description: "csharp docker", promotionLevel: 40);
+        int firstSkillId = 1;
+        int firstSkillScore = 80;
+        string firstSkillName = "C#";
+        var userSkills = new[]
+        {
+            BuildUserSkill(skillId: firstSkillId, score: firstSkillScore, name: firstSkillName),
+        };
+        var jobSkills = Array.Empty<JobSkill>();
+        var breakdown = algorithm.CalculateScoreBreakdown(user, job, userSkills, jobSkills);
+
+        double expectedResult = 0;
+        breakdown.SkillScore.Should().Be(expectedResult);
+    }
+
+    [Fact]
+    public void CalculateScoreBreakdown_NoKeywords_ReturnsZero()
+    {
+        var user = BuildUser(locationPreference: "Cluj-Napoca", employmentType: "Part-time", parsedCv: string.Empty);
+        var job = BuildJob(location: "Cluj-Napoca", employmentType: "Full-time", description: string.Empty, promotionLevel: 40);
+        var breakdown = algorithm.CalculateScoreBreakdown(user, job, [], []);
+        double expectedResult = 0;
+        breakdown.KeywordScore.Should().Be(expectedResult);
     }
 
     [Fact]

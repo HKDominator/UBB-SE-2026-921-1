@@ -189,7 +189,7 @@ public class RecommendationAlgorithm : IRecommendationAlgorithm
         Dictionary<int, double> dictionaryOfIdAndScore = new Dictionary<int, double>();
         foreach (var userSkill in userSkills)
         {
-            dictionaryOfIdAndScore[userSkill.SkillId] = userSkill.Score;
+            dictionaryOfIdAndScore[userSkill.Skill.SkillId] = userSkill.Score;
         }
 
         return dictionaryOfIdAndScore;

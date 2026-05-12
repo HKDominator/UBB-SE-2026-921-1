@@ -78,7 +78,7 @@ public class UserStatusService : IUserStatusService
         var userSkillMap = new Dictionary<int, int>();
         foreach (var userSkill in userSkills)
         {
-            userSkillMap[userSkill.SkillId] = userSkill.Score;
+            userSkillMap[userSkill.Skill.SkillId] = userSkill.Score;
         }
 
         double total = 0;

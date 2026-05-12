@@ -38,7 +38,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         // soft-delete via ActiveAccount = false instead.
         builder.HasMany(user => user.WorkExperiences)
             .WithOne(workExperience => workExperience.User)
-            .HasForeignKey(workExperience => workExperience.UserId)
+            .HasForeignKey("UserId")
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(user => user.Projects)
@@ -53,7 +53,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasMany(user => user.Skills)
             .WithOne(skill => skill.User)
-            .HasForeignKey(skill => skill.UserId)
+            .HasForeignKey("UserId")
             .OnDelete(DeleteBehavior.Cascade);
 
         // PersonalityResult is one-to-zero-or-one; cascade so the result and its trait scores

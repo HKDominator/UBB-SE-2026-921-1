@@ -230,7 +230,7 @@ public class RecommendationAlgorithm : IRecommendationAlgorithm
             var targetScore = requiredSkill.RequiredLevel;
             var skillName = GetSkillName(requiredSkill.Skill);
 
-            var userScore = userScoreBySkillId.TryGetValue(requiredSkill.SkillId, out var skillScoreFoundById)
+            var userScore = userScoreBySkillId.TryGetValue(requiredSkill.Skill.SkillId, out var skillScoreFoundById)
                 ? skillScoreFoundById
                 : userScoreBySkillName.TryGetValue(skillName, out var skillScoreFoundByName)
                     ? skillScoreFoundByName

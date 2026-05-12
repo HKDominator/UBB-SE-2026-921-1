@@ -174,7 +174,6 @@ public class RecommendationAlgorithmTests
     {
         return new JobSkill
         {
-            SkillId = skillId,
             RequiredLevel = requiredLevel,
             Skill = new Skill { SkillId = skillId, Name = name },
         };

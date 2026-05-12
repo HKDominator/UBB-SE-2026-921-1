@@ -1091,7 +1091,7 @@ public class ChatViewModel : DispatchableObservableObject
                 continue;
             }
 
-            if (GetChatDisplayName(chat).Contains(query, StringComparison.OrdinalIgnoreCase))
+            if (ChatDisplayNameResolver.Resolve(chat).Contains(query, StringComparison.OrdinalIgnoreCase))
             {
                 result.Add(chat);
             }
@@ -1110,7 +1110,7 @@ public class ChatViewModel : DispatchableObservableObject
                 continue;
             }
 
-            if (GetChatDisplayName(chat).Contains(query, StringComparison.OrdinalIgnoreCase))
+            if (ChatDisplayNameResolver.Resolve(chat).Contains(query, StringComparison.OrdinalIgnoreCase))
             {
                 result.Add(chat);
             }
@@ -1129,7 +1129,7 @@ public class ChatViewModel : DispatchableObservableObject
                 continue;
             }
 
-            if (GetChatDisplayName(chat).Contains(query, StringComparison.OrdinalIgnoreCase))
+            if (ChatDisplayNameResolver.Resolve(chat).Contains(query, StringComparison.OrdinalIgnoreCase))
             {
                 result.Add(chat);
             }
@@ -1137,7 +1137,6 @@ public class ChatViewModel : DispatchableObservableObject
 
         return result;
     }
-
 }
 
 public sealed class MessageDisplayViewModel
@@ -1187,10 +1186,13 @@ public sealed class ContactSearchResultViewModel
 
     public static ContactSearchResultViewModel ForChat(Chat chat)
     {
-        return new ContactSearchResultViewModel(ContactSearchResultKind.Chat, chat.ChatId, GetChatDisplayName(chat), chat.LastMessageSnippet, chat);
+        return new ContactSearchResultViewModel(ContactSearchResultKind.Chat, chat.ChatId, ChatDisplayNameResolver.Resolve(chat), chat.LastMessageSnippet, chat);
     }
+}
 
-    private static string GetChatDisplayName(Chat chat)
+internal static class ChatDisplayNameResolver
+{
+    public static string Resolve(Chat chat)
     {
         if (chat.SecondUser is not null)
         {

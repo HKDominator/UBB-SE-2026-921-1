@@ -3,7 +3,8 @@ using PussyCats.Library.Repositories.Chats;
 
 namespace PussyCats.Tests.Fakes
 {
-    public class FakeChatRepository : IChatRepository
+
+    public class InMemoryChatRepository : IChatRepository
     {
         private readonly List<Chat> chats = new();
         private int nextId = 1;
@@ -18,8 +19,8 @@ namespace PussyCats.Tests.Fakes
         {
             var result = chats
                 .Where(chat =>
-                    (chat.User?.UserId == userId) ||
-                    (chat.SecondUserId == userId))
+                    chat.User?.UserId == userId ||
+                    chat.SecondUser?.UserId == userId)
                 .ToList();
 
             return Task.FromResult((IReadOnlyList<Chat>)result);
@@ -39,8 +40,8 @@ namespace PussyCats.Tests.Fakes
             CancellationToken cancellationToken = default)
         {
             var result = chats.FirstOrDefault(chat =>
-                (chat.User?.UserId == userId && chat.SecondUserId == secondUserId) ||
-                (chat.User?.UserId == secondUserId && chat.SecondUserId == userId));
+                (chat.User?.UserId == userId && chat.SecondUser?.UserId == secondUserId)
+                || (chat.User?.UserId == secondUserId && chat.SecondUser?.UserId == userId));
 
             return Task.FromResult(result);
         }
@@ -50,9 +51,11 @@ namespace PussyCats.Tests.Fakes
         {
             var result = chats.FirstOrDefault(chat =>
                 chat.User?.UserId == userId &&
-                chat.Company?.CompanyId == company.CompanyId &&
-                chat.Job?.JobId == jobId &&
-                chat.SecondUserId == null);
+                chat.Company != null &&
+                chat.Company.CompanyId == company.CompanyId &&
+                chat.Job != null &&
+                chat.Job.JobId == jobId &&
+                chat.SecondUser?.UserId == null);
 
             return Task.FromResult(result);
         }
@@ -76,6 +79,7 @@ namespace PussyCats.Tests.Fakes
             return Task.CompletedTask;
         }
 
+        
         public List<Chat> Dump() => chats;
     }
 }

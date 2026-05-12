@@ -6,7 +6,7 @@ public class Document
 {
     public int DocumentId { get; set; }
 
-    [JsonIgnore] public User User { get; set; } = null!;
+    public User User { get; set; } = null!;
 
     public string DocumentName { get; set; } = string.Empty;
     public string FilePath { get; set; } = string.Empty;

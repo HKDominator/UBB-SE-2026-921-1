@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 public class Chat
 {
     public int ChatId { get; set; }
-    [JsonIgnore] public User User { get; set; } = null!;
+    public User User { get; set; } = null!;
     public int? CompanyId { get; set; }
     [JsonIgnore] public Company? Company { get; set; }
     public int? SecondUserId { get; set; }

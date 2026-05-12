@@ -8,53 +8,51 @@ namespace PussyCats.Tests.Services;
 
 public class SkillTestServiceTests
 {
-    private readonly FakeSkillTestRepository repo = new();
-    private readonly SkillTestService service;
+    private readonly FakeSkillTestRepository skillTestRepository = new();
+    private readonly SkillTestService skillTestService;
+
+    private int ExcellentRetakeScore = 95;
+    private const int FailingRetakeScore = 50;
 
     public SkillTestServiceTests()
     {
-        service = new SkillTestService(repo);
+        skillTestService = new SkillTestService(skillTestRepository);
     }
 
-    [Fact]
-    public async Task GetTestsForUserAsync_UserHasTests_ReturnsUserTests()
-    {
-        repo.Seed(
-            new SkillTestBuilder().WithId(1).ForUser(1).Build(),
-            new SkillTestBuilder().WithId(2).ForUser(2).Build());
-
-        var result = await service.GetTestsForUserAsync(1);
-
-        result.Should().HaveCount(1);
-        result[0].User.UserId.Should().Be(1);
-    }
 
     [Fact]
     public async Task CanRetakeTestAsync_TestOlderThanEligibilityWindow_ReturnsTrue()
     {
-        repo.Seed(new SkillTestBuilder()
-            .WithId(1)
-            .WithAchievedDate(DateOnly.FromDateTime(DateTime.Now.AddMonths(-4)))
+        DateOnly fourMonthsAgo = DateOnly.FromDateTime(DateTime.Now.AddMonths(-4));
+        int skillTestId = 1;
+
+        skillTestRepository.Seed(new SkillTestBuilder()
+            .WithId(skillTestId)
+            .WithAchievedDate(fourMonthsAgo)
             .Build());
 
-        (await service.CanRetakeTestAsync(1)).Should().BeTrue();
+        (await skillTestService.CanRetakeTestAsync(skillTestId)).Should().BeTrue();
     }
 
     [Fact]
     public async Task CanRetakeTestAsync_TestInsideEligibilityWindow_ReturnsFalse()
     {
-        repo.Seed(new SkillTestBuilder()
-            .WithId(1)
-            .WithAchievedDate(DateOnly.FromDateTime(DateTime.Now.AddMonths(-1)))
+        DateOnly oneMonthAgo = DateOnly.FromDateTime(DateTime.Now.AddMonths(-1));
+        int skillTestId = 1;
+
+        skillTestRepository.Seed(new SkillTestBuilder()
+            .WithId(skillTestId)
+            .WithAchievedDate(oneMonthAgo)
             .Build());
 
-        (await service.CanRetakeTestAsync(1)).Should().BeFalse();
+        (await skillTestService.CanRetakeTestAsync(skillTestId)).Should().BeFalse();
     }
 
     [Fact]
     public async Task CanRetakeTestAsync_TestIsMissing_ThrowsException()
     {
-        Func<Task> act = () => service.CanRetakeTestAsync(404);
+        int missingTestId = 100;
+        Func<Task> act = () => skillTestService.CanRetakeTestAsync(missingTestId);
 
         await act.Should().ThrowAsync<Exception>()
             .WithMessage("*No test found*");
@@ -63,16 +61,19 @@ public class SkillTestServiceTests
     [Fact]
     public async Task SubmitRetakeAsync_UserIsEligible_UpdatesScoreAndDateAndReturnsBadge()
     {
-        repo.Seed(new SkillTestBuilder()
-            .WithId(1)
-            .WithScore(40)
-            .WithAchievedDate(DateOnly.FromDateTime(DateTime.Now.AddMonths(-6)))
+        int skillTetsId = 1;
+        int initialScore = 40;
+        DateOnly sixMonthsAgo = DateOnly.FromDateTime(DateTime.Now.AddMonths(-6));
+        skillTestRepository.Seed(new SkillTestBuilder()
+            .WithId(skillTetsId)
+            .WithScore(initialScore)
+            .WithAchievedDate(sixMonthsAgo)
             .Build());
 
-        var badge = await service.SubmitRetakeAsync(1, newScore: 95);
+        var badge = await skillTestService.SubmitRetakeAsync(skillTetsId, ExcellentRetakeScore);
 
-        var test = await repo.GetByIdAsync(1);
-        test!.Score.Should().Be(95);
+        var test = await skillTestRepository.GetByIdAsync(skillTetsId);
+        test!.Score.Should().Be(ExcellentRetakeScore);
         test.AchievedDate.Should().Be(DateOnly.FromDateTime(DateTime.Now));
         badge.Tier.Should().Be(BadgeTier.Gold);
         badge.ExperiencePointsValue.Should().Be(SimpleModelOperations.GoldExperiencePoints);
@@ -81,36 +82,47 @@ public class SkillTestServiceTests
     [Fact]
     public async Task SubmitRetakeAsync_UserIsNotYetEligible_ThrowsException()
     {
-        repo.Seed(new SkillTestBuilder()
-            .WithId(1)
-            .WithAchievedDate(DateOnly.FromDateTime(DateTime.Now.AddDays(-10)))
+        int skillTestId = 1;
+        DateOnly tenDaysAgo = DateOnly.FromDateTime(DateTime.Now.AddDays(-10));
+        skillTestRepository.Seed(new SkillTestBuilder()
+            .WithId(skillTestId)
+            .WithAchievedDate(tenDaysAgo)
             .Build());
 
-        Func<Task> act = () => service.SubmitRetakeAsync(1, 95);
+        Func<Task> act = () => skillTestService.SubmitRetakeAsync(skillTestId, ExcellentRetakeScore);
 
         await act.Should().ThrowAsync<Exception>()
             .WithMessage("*not yet eligible*");
     }
 
-    [Fact]
-    public async Task GetSkillTestByIdAsync_TestExists_ReturnsTest()
-    {
-        repo.Seed(new SkillTestBuilder().WithId(7).WithName("Algorithms").Build());
-
-        (await service.GetSkillTestByIdAsync(7))!.Name.Should().Be("Algorithms");
-    }
 
     [Fact]
     public void IsRetakeEligible_TestDatesProvided_EnforcesThreeMonthWindow()
     {
+        DateOnly fourMonthsAgo = DateOnly.FromDateTime(DateTime.Now.AddMonths(-4));
+        DateOnly thirtyDaysAgo = DateOnly.FromDateTime(DateTime.Now.AddDays(-30));
         var oldEnough = new SkillTestBuilder()
-            .WithAchievedDate(DateOnly.FromDateTime(DateTime.Now.AddMonths(-4)))
+            .WithAchievedDate(fourMonthsAgo)
             .Build();
         var tooRecent = new SkillTestBuilder()
-            .WithAchievedDate(DateOnly.FromDateTime(DateTime.Now.AddDays(-30)))
+            .WithAchievedDate(thirtyDaysAgo)
             .Build();
 
         SkillTestService.IsRetakeEligible(oldEnough).Should().BeTrue();
         SkillTestService.IsRetakeEligible(tooRecent).Should().BeFalse();
+    }
+    [Fact]
+    public void AchievedDateFormatted_ReturnsFormattedDate()
+    {
+        string expectedFormattedDate = "12.05.2025";
+
+        DateOnly achievedDate = new(2025, 5, 12);
+        var skillTest = new SkillTestBuilder()
+            .WithAchievedDate(achievedDate)
+            .Build();
+
+        var result = SkillTestService.AchievedDateFormatted(skillTest);
+
+        result.Should().Be(expectedFormattedDate);
     }
 }

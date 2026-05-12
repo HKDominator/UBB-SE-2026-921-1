@@ -34,8 +34,9 @@ public class UserStatusService : IUserStatusService
             .ToDictionary(job => job.JobId);
         var companiesById = (await companyService.GetAllAsync(cancellationToken).ConfigureAwait(false))
             .ToDictionary(company => company.CompanyId);
+        
         var jobSkillsByJobId = (await jobSkillService.GetAllAsync(cancellationToken).ConfigureAwait(false))
-            .GroupBy(jobSkill => jobSkill.JobId)
+            .GroupBy(jobSkill => jobSkill.Job.JobId)
             .ToDictionary(group => group.Key, group => (IReadOnlyList<JobSkill>)group.ToList());
         var result = new List<ApplicationCardModel>();
 
@@ -84,7 +85,7 @@ public class UserStatusService : IUserStatusService
         double total = 0;
         foreach (var required in jobSkills)
         {
-            if (userSkillMap.TryGetValue(required.SkillId, out var userScore))
+            if (userSkillMap.TryGetValue(required.Skill.SkillId, out var userScore))
             {
                 total += Math.Min(userScore, required.RequiredLevel) / (double)required.RequiredLevel;
             }

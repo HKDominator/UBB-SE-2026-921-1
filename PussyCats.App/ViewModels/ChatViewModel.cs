@@ -383,7 +383,7 @@ public class ChatViewModel : DispatchableObservableObject
 
             if (IsCandidateMode)
             {
-                ActiveTab = chat.SecondUserId.HasValue ? "Users" : "Company";
+                ActiveTab = chat.SecondUser != null ? "Users" : "Company";
                 ApplyTabFilter();
 
                 var oldFilteredChat = FindChatById(FilteredChats, chat.ChatId);
@@ -460,7 +460,7 @@ public class ChatViewModel : DispatchableObservableObject
             Messages.Clear();
             foreach (var message in messages)
             {
-                message.SenderInitials = ResolveSenderInitials(message.SenderId);
+                message.SenderInitials = ResolveSenderInitials(message.Sender.SenderId);
                 Messages.Add(new MessageDisplayViewModel(message));
             }
 
@@ -661,7 +661,7 @@ public class ChatViewModel : DispatchableObservableObject
             if (hasUnreadFromOtherParty)
             {
                 await chatService.MarkMessagesAsReadAsync(refreshedSelectedChat.ChatId, callerId);
-                foreach (var message in latestMessages.Where(message => message.SenderId != callerId))
+                foreach (var message in latestMessages.Where(message => message.Sender.SenderId != callerId))
                 {
                     message.IsRead = true;
                 }
@@ -673,7 +673,7 @@ public class ChatViewModel : DispatchableObservableObject
                 Messages.Clear();
                 foreach (var message in latestMessages)
                 {
-                    message.SenderInitials = ResolveSenderInitials(message.SenderId);
+                    message.SenderInitials = ResolveSenderInitials(message.Sender.SenderId);
                     Messages.Add(new MessageDisplayViewModel(message));
                 }
             }
@@ -701,7 +701,7 @@ public class ChatViewModel : DispatchableObservableObject
 
         for (var index = messages.Count - 1; index >= 0; index--)
         {
-            if (messages[index].SenderId == currentSenderId)
+            if (messages[index].Sender.SenderId == currentSenderId)
             {
                 messages[index].ShowReadReceipt = true;
                 break;
@@ -752,7 +752,7 @@ public class ChatViewModel : DispatchableObservableObject
 
         var callerId = GetCallerId();
         ShowBlock = !SelectedChat.IsBlocked;
-        ShowUnblock = SelectedChat.IsBlocked && SelectedChat.BlockedByUserId == callerId;
+        ShowUnblock = SelectedChat.IsBlocked && SelectedChat.BlockedByUser?.UserId == callerId;
 
         if (IsCompanyMode)
         {
@@ -761,8 +761,8 @@ public class ChatViewModel : DispatchableObservableObject
         }
         else
         {
-            ShowGoToProfile = SelectedChat.SecondUserId.HasValue;
-            ShowGoToCompanyProfile = SelectedChat.Company != null;
+            ShowGoToProfile = SelectedChat.SecondUser != null;
+            ShowGoToCompanyProfile = SelectedChat.Company!=null;
         }
 
         ShowGoToJobPost = SelectedChat.Job!=null;
@@ -840,7 +840,7 @@ public class ChatViewModel : DispatchableObservableObject
             return;
         }
 
-        var userId = SelectedChat.SecondUserId ?? SelectedChat.UserId;
+        var userId = SelectedChat.SecondUser?.UserId ?? SelectedChat.User.UserId;
         if (userId <= 0)
         {
             return;
@@ -946,16 +946,15 @@ public class ChatViewModel : DispatchableObservableObject
 
     private static bool IsChatDifferent(Chat current, Chat updated)
     {
-        return current.UserId != updated.UserId ||
+        return current.User.UserId != updated.User.UserId ||
                current.Company?.CompanyId != updated.Company?.CompanyId ||
-               current.SecondUserId != updated.SecondUserId ||
+               current.SecondUser?.UserId != updated.SecondUser?.UserId ||
                current.Job?.JobId != updated.Job?.JobId ||
                current.IsBlocked != updated.IsBlocked ||
-               current.BlockedByUserId != updated.BlockedByUserId ||
+               current.BlockedByUser?.UserId != updated.BlockedByUser?.UserId ||
                !Nullable.Equals(current.DeletedAtByUser, updated.DeletedAtByUser) ||
                !Nullable.Equals(current.DeletedAtBySecondParty, updated.DeletedAtBySecondParty) ||
                current.UnreadCount != updated.UnreadCount ||
-               !string.Equals(current.OtherPartyName, updated.OtherPartyName, StringComparison.Ordinal) ||
                !string.Equals(current.LastMessage, updated.LastMessage, StringComparison.Ordinal) ||
                !string.Equals(current.LastMessageSnippet, updated.LastMessageSnippet, StringComparison.Ordinal) ||
                !string.Equals(current.LastMessageTime, updated.LastMessageTime, StringComparison.Ordinal);
@@ -977,7 +976,7 @@ public class ChatViewModel : DispatchableObservableObject
                 current.IsRead != latest.IsRead ||
                 current.Content != latest.Content ||
                 current.Timestamp != latest.Timestamp ||
-                current.SenderId != latest.SenderId ||
+                current.Sender.SenderId != latest.Sender.SenderId ||
                 current.Type != latest.Type)
             {
                 return true;
@@ -1022,7 +1021,7 @@ public class ChatViewModel : DispatchableObservableObject
         var result = new List<Chat>();
         foreach (var chat in chats)
         {
-            if (chat.SecondUserId.HasValue)
+            if (chat.SecondUser != null)
             {
                 result.Add(chat);
             }
@@ -1062,7 +1061,7 @@ public class ChatViewModel : DispatchableObservableObject
     {
         foreach (var message in messages)
         {
-            if (message.SenderId != currentCallerId && !message.IsRead)
+            if (message.Sender.SenderId != currentCallerId && !message.IsRead)
             {
                 return true;
             }
@@ -1087,12 +1086,12 @@ public class ChatViewModel : DispatchableObservableObject
         var result = new List<Chat>();
         foreach (var chat in chats)
         {
-            if (!chat.SecondUserId.HasValue)
+            if (chat.SecondUser == null)
             {
                 continue;
             }
 
-            if (chat.OtherPartyName.Contains(query, StringComparison.OrdinalIgnoreCase))
+            if (ChatDisplayNameResolver.Resolve(chat).Contains(query, StringComparison.OrdinalIgnoreCase))
             {
                 result.Add(chat);
             }
@@ -1111,7 +1110,7 @@ public class ChatViewModel : DispatchableObservableObject
                 continue;
             }
 
-            if (chat.OtherPartyName.Contains(query, StringComparison.OrdinalIgnoreCase))
+            if (ChatDisplayNameResolver.Resolve(chat).Contains(query, StringComparison.OrdinalIgnoreCase))
             {
                 result.Add(chat);
             }
@@ -1125,12 +1124,12 @@ public class ChatViewModel : DispatchableObservableObject
         var result = new List<Chat>();
         foreach (var chat in chats)
         {
-            if (chat.UserId <= 0)
+            if (chat.User.UserId <= 0)
             {
                 continue;
             }
 
-            if (chat.OtherPartyName.Contains(query, StringComparison.OrdinalIgnoreCase))
+            if (ChatDisplayNameResolver.Resolve(chat).Contains(query, StringComparison.OrdinalIgnoreCase))
             {
                 result.Add(chat);
             }
@@ -1187,7 +1186,25 @@ public sealed class ContactSearchResultViewModel
 
     public static ContactSearchResultViewModel ForChat(Chat chat)
     {
-        return new ContactSearchResultViewModel(ContactSearchResultKind.Chat, chat.ChatId, chat.OtherPartyName, chat.LastMessageSnippet, chat);
+        return new ContactSearchResultViewModel(ContactSearchResultKind.Chat, chat.ChatId, ChatDisplayNameResolver.Resolve(chat), chat.LastMessageSnippet, chat);
+    }
+}
+
+internal static class ChatDisplayNameResolver
+{
+    public static string Resolve(Chat chat)
+    {
+        if (chat.SecondUser is not null)
+        {
+            return chat.SecondUser.Name;
+        }
+
+        if (chat.CompanyId.HasValue)
+        {
+            return chat.Company?.CompanyName ?? $"Company {chat.CompanyId.Value}";
+        }
+
+        return chat.User.Name;
     }
 }
 

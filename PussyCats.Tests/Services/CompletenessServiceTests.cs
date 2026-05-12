@@ -35,7 +35,7 @@ public class CompletenessServiceTests
     [Fact]
     public void CalculateCompleteness_SingleFieldFilled_ReturnsFivePercent()
     {
-        // 1 of 21 ≈ 5%
+        // 1 of 21 ~ 5%
         var user = new User { FirstName = "Ada" };
 
         service.CalculateCompleteness(user).Should().Be(5);
@@ -101,7 +101,7 @@ public class CompletenessServiceTests
         LinkedIn = "linkedin.com/in/ada",
         Address = "1 Main St",
         ProfilePicturePath = "pic.png",
-        Skills = new List<UserSkill> { new() { SkillId = 1, Score = 80 } },
+        Skills = new List<UserSkill> { new() { Skill = new Skill { SkillId = 1 }, Score = 80 } },
         Motivation = "Build cool things.",
         WorkExperiences = new List<WorkExperience> { new() { Company = "Acme", JobTitle = "Eng" } },
         Projects = new List<Project> { new() { Name = "p1" } },

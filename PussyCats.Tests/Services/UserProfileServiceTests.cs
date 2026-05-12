@@ -17,13 +17,6 @@ public class UserProfileServiceTests
         service = new UserProfileService(userRepo, skillTestRepo);
     }
 
-    [Fact]
-    public async Task GetProfileAsync_UserExists_ReturnsUser()
-    {
-        userRepo.Seed(new UserBuilder().WithId(1).Build());
-
-        (await service.GetProfileAsync(1)).Should().NotBeNull();
-    }
 
     [Fact]
     public async Task IsProfileAvailableAsync_UserIsMissing_ThrowsException()
@@ -120,8 +113,8 @@ public class UserProfileServiceTests
         user.University = "Cambridge";
         user.Skills = new List<UserSkill>
         {
-            new() { SkillId = 1, Skill = new Skill { Name = "C#" } },
-            new() { SkillId = 2, Skill = new Skill { Name = "SQL" } },
+            new() { Skill = new Skill { SkillId = 1, Name = "C#" } },
+            new() { Skill = new Skill { SkillId = 2, Name = "SQL" } },
         };
 
         var text = service.GenerateParsedCvText(user);

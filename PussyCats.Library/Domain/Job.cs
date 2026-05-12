@@ -14,8 +14,7 @@ public class Job
     public int PromotionLevel { get; set; }
     public JobRole JobRole { get; set; }
 
-    public int CompanyId { get; set; }
-    [JsonIgnore] public Company Company { get; set; } = null!;
+    public Company Company { get; set; } = null!;
 
     public List<JobSkill> RequiredSkills { get; set; } = new();
     public List<Match> Matches { get; set; } = new();

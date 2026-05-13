@@ -9,16 +9,16 @@ namespace PussyCats.Tests.Services;
 
 public class DocumentServiceTests : IDisposable
 {
-    private readonly FakeDocumentRepository repo;
+    private readonly FakeDocumentRepository documentRepository;
     private readonly ILocalFileStorageService fileStorage;
     private readonly DocumentService service;
     private readonly string tempPdfPath;
 
     public DocumentServiceTests()
     {
-        repo = new FakeDocumentRepository();
+        documentRepository = new FakeDocumentRepository();
         fileStorage = Substitute.For<ILocalFileStorageService>();
-        service = new DocumentService(repo, fileStorage);
+        service = new DocumentService(documentRepository, fileStorage);
         tempPdfPath = Path.Combine(Path.GetTempPath(), $"docsvc-{Guid.NewGuid():N}.pdf");
         File.WriteAllText(tempPdfPath, "%PDF-1.4 fake");
     }

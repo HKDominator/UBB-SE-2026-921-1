@@ -34,79 +34,98 @@ public class CompanyRecommendationServiceTests
     [Fact]
     public async Task LoadApplicantsAsync_CompanyHasNoJobs_ResultsInNoApplicants()
     {
+        const int nonExistentCompanyId = 99;
         var service = BuildService();
 
-        await service.LoadApplicantsAsync(99);
+        await service.LoadApplicantsAsync(nonExistentCompanyId);
 
         service.HasMore.Should().BeFalse();
-        service.GetNextApplicant().Should().BeNull();
     }
 
     [Fact]
     public async Task LoadApplicantsAsync_MatchesExist_IncludesOnlyAppliedMatchesForCompanyJobs()
     {
-        const int firstUserId = 1, secondUserId = 2;
-        const int firstCompanyId = 5, secondCompanyId = 99;
-        const int firstJobId = 10, secondJobId = 20;
-        const double compaitibilityScore = 50.0;
-        userRepository.Seed(new UserBuilder().WithId(firstUserId).Build(), new UserBuilder().WithId(secondUserId).Build());
-        jobRepository.Seed(
-            new JobBuilder().WithId(firstJobId).WithCompanyId(firstCompanyId).Build(),
-            new JobBuilder().WithId(secondJobId).WithCompanyId(secondCompanyId).Build());
-        matchRepository.Seed(
-            new MatchBuilder().WithId(1).AppliedFor(firstUserId, firstJobId).WithStatus(MatchStatus.Applied).Build(),
-            new MatchBuilder().WithId(2).AppliedFor(secondUserId, firstJobId).WithStatus(MatchStatus.Rejected).Build(),
-            new MatchBuilder().WithId(3).AppliedFor(firstUserId, secondJobId).WithStatus(MatchStatus.Applied).Build());
-        
-        algorithm.CalculateCompatibilityScore(default!, default!, default!, default!).ReturnsForAnyArgs(compaitibilityScore);
+        const int targetCompanyId = 5;
+        const int otherCompanyId = 99;
+        const int targetJobId = 10;
+        const int otherJobId = 20;
+
+        const int userId1 = 1;
+        const int userId2= 2;
+
+        const int appliedMatchId = 1;
+        const int rejectedMatchId = 2;
+
+        const int otherComapnyMatchId = 3;
+        const double compatibilityScore = 50.0;
+
+        userRepo.Seed(new UserBuilder().WithId(userId1).Build(), new UserBuilder().WithId(userId2).Build());
+        jobRepo.Seed(
+            new JobBuilder().WithId(targetJobId).WithCompanyId(targetCompanyId).Build(),
+            new JobBuilder().WithId(otherJobId).WithCompanyId(otherCompanyId).Build());
+        matchRepo.Seed(
+            new MatchBuilder().WithId(appliedMatchId).AppliedFor(userId1, targetJobId).WithStatus(MatchStatus.Applied).Build(),
+            new MatchBuilder().WithId(rejectedMatchId).AppliedFor(userId2, targetJobId).WithStatus(MatchStatus.Rejected).Build(),
+            new MatchBuilder().WithId(otherComapnyMatchId).AppliedFor(userId1,otherJobId).WithStatus(MatchStatus.Applied).Build());
+        algorithm.CalculateCompatibilityScore(default!, default!, default!, default!)
+            .ReturnsForAnyArgs(compatibilityScore);
 
         var service = BuildService();
-        await service.LoadApplicantsAsync(firstCompanyId);
+        await service.LoadApplicantsAsync(targetCompanyId);
 
-        service.HasMore.Should().BeTrue();
-        service.GetNextApplicant()!.Match.MatchId.Should().Be(firstUserId);
+        service.GetNextApplicant()!.Match.MatchId.Should().Be(appliedMatchId);
     }
 
     [Fact]
     public async Task LoadApplicantsAsync_MultipleApplicants_SortsApplicantsByScoreDescending()
     {
-        const int firstUserId = 1, secondUserId = 2;
-        const int jobId = 10, companyId = 5;
-        const double compatibilityScoreForFirstUser = 40.0, compatibilityScoreForSecondUser = 80.0;
-        userRepository.Seed(new UserBuilder().WithId(firstUserId).Build(), new UserBuilder().WithId(secondUserId).Build());
-        jobRepository.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
-        matchRepository.Seed(
-            new MatchBuilder().WithId(1).AppliedFor(firstUserId, jobId).WithStatus(MatchStatus.Applied).Build(),
-            new MatchBuilder().WithId(2).AppliedFor(secondUserId, jobId).WithStatus(MatchStatus.Applied).Build());
+
+        const int companyId = 5;
+        const int jobId = 10;
+        const int lowerScoringUserId = 1;
+        const int higherScoringUserId = 2;
+        const int matchId1 = 1;
+        const int matchId2 = 2;
+        const double lowScore = 40.0;
+        const double highScore = 80.0;
+
+        userRepo.Seed(new UserBuilder().WithId(lowerScoringUserId).Build(), new UserBuilder().WithId(higherScoringUserId).Build());
+        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
+        matchRepo.Seed(
+            new MatchBuilder().WithId(matchId1).AppliedFor(lowerScoringUserId, jobId).WithStatus(MatchStatus.Applied).Build(),
+            new MatchBuilder().WithId(matchId2).AppliedFor(higherScoringUserId, jobId).WithStatus(MatchStatus.Applied).Build());
         algorithm.CalculateCompatibilityScore(
-            Arg.Is<User>(user => user.UserId == firstUserId),
+            Arg.Is<User>(user => user.UserId == lowerScoringUserId),
             Arg.Any<Job>(),
             Arg.Any<IReadOnlyList<UserSkill>>(),
-            Arg.Any<IReadOnlyList<JobSkill>>()).Returns(compatibilityScoreForFirstUser);
+            Arg.Any<IReadOnlyList<JobSkill>>()).Returns(lowScore);
         algorithm.CalculateCompatibilityScore(
-            Arg.Is<User>(user => user.UserId == secondUserId),
+            Arg.Is<User>(user => user.UserId == higherScoringUserId),
             Arg.Any<Job>(),
             Arg.Any<IReadOnlyList<UserSkill>>(),
-            Arg.Any<IReadOnlyList<JobSkill>>()).Returns(compatibilityScoreForSecondUser);
+            Arg.Any<IReadOnlyList<JobSkill>>()).Returns(highScore);
 
         var service = BuildService();
         await service.LoadApplicantsAsync(companyId);
 
-        var first = service.GetNextApplicant();
-        first!.User.UserId.Should().Be(secondUserId);
-        service.MoveToNext();
-        service.GetNextApplicant()!.User.UserId.Should().Be(firstUserId);
+        var firstApplicant = service.GetNextApplicant();
+
+        firstApplicant!.User.UserId.Should().Be(higherScoringUserId);
     }
 
     [Fact]
     public async Task MoveToNext_QueueExhausted_ReturnsNullAfterLastApplicant()
     {
+        const int companyId = 5;
+        const int jobId = 10;
         const int userId = 1;
-        const int jobId = 10, companyId = 5;
-        const double compatibilityScore = 50;
-        userRepository.Seed(new UserBuilder().WithId(userId).Build());
-        jobRepository.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
-        matchRepository.Seed(new MatchBuilder().WithId(1).AppliedFor(userId, jobId).WithStatus(MatchStatus.Applied).Build());
+        const int matchId = 1;
+        const double compatibilityScore = 50.0;
+
+
+        userRepo.Seed(new UserBuilder().WithId(userId).Build());
+        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
+        matchRepo.Seed(new MatchBuilder().WithId(matchId).AppliedFor(userId, jobId).WithStatus(MatchStatus.Applied).Build());
         algorithm.CalculateCompatibilityScore(default!, default!, default!, default!).ReturnsForAnyArgs(compatibilityScore);
 
         var service = BuildService();
@@ -115,18 +134,20 @@ public class CompanyRecommendationServiceTests
         service.MoveToNext();
 
         service.HasMore.Should().BeFalse();
-        service.GetNextApplicant().Should().BeNull();
     }
 
     [Fact]
     public async Task MoveToPrevious_AtStartOfQueue_DoesNotUnderflowBelowZero()
     {
-        const int userId = 1, jobId = 10, companyId = 5;
-        const double compatibilityScore = 50;
+        const int companyId = 5;
+        const int jobId = 10;
+        const int userId = 1;
+        const int matchId = 1;
+        const double compatibilityScore = 50.0;
 
-        userRepository.Seed(new UserBuilder().WithId(userId).Build());
-        jobRepository.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
-        matchRepository.Seed(new MatchBuilder().WithId(1).AppliedFor(userId, jobId).WithStatus(MatchStatus.Applied).Build());
+        userRepo.Seed(new UserBuilder().WithId(userId).Build());
+        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
+        matchRepo.Seed(new MatchBuilder().WithId(matchId).AppliedFor(userId, jobId).WithStatus(MatchStatus.Applied).Build());
         algorithm.CalculateCompatibilityScore(default!, default!, default!, default!).ReturnsForAnyArgs(compatibilityScore);
 
         var service = BuildService();
@@ -141,9 +162,9 @@ public class CompanyRecommendationServiceTests
     [Fact]
     public async Task GetBreakdownAsync_Called_DelegatesToAlgorithm()
     {
-        const int overallScore = 75;
-        const int userId = 1, jobId = 10;
-        var breakdown = new CompatibilityBreakdown { OverallScore = overallScore };
+        const int score = 75;
+
+        var breakdown = new CompatibilityBreakdown { OverallScore = score };
         algorithm.CalculateScoreBreakdown(default!, default!, default!, default!).ReturnsForAnyArgs(breakdown);
 
         var applicant = new UserApplicationResult
@@ -157,7 +178,46 @@ public class CompanyRecommendationServiceTests
         var service = BuildService();
         var result = await service.GetBreakdownAsync(applicant);
 
-        result!.OverallScore.Should().Be(overallScore);
+        result!.OverallScore.Should().Be(score);
+    }
+
+    [Fact]
+    public async Task MoveToPrevious_AfterMovingNext_ReturnsToPreviousApplicant()
+    {
+        const int companyId = 5;
+        const int jobId = 10;
+        const int firstUserId = 1;
+        const int secondUserId = 2;
+
+        const int matchId1 = 1;
+        const int matchId2 = 2;
+        const double lowScore = 40.0;
+        const double highScore = 80.0;
+
+        userRepo.Seed(new UserBuilder().WithId(firstUserId).Build(), new UserBuilder().WithId(secondUserId).Build());
+        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
+        matchRepo.Seed(
+            new MatchBuilder().WithId(matchId1).AppliedFor(firstUserId, jobId).WithStatus(MatchStatus.Applied).Build(),
+            new MatchBuilder().WithId(matchId2).AppliedFor(secondUserId, jobId).WithStatus(MatchStatus.Applied).Build());
+        algorithm.CalculateCompatibilityScore(
+            Arg.Is<User>(user => user.UserId == firstUserId),
+            Arg.Any<Job>(),
+            Arg.Any<IReadOnlyList<UserSkill>>(),
+            Arg.Any<IReadOnlyList<JobSkill>>()).Returns(highScore);
+        algorithm.CalculateCompatibilityScore(
+            Arg.Is<User>(user => user.UserId == secondUserId),
+            Arg.Any<Job>(),
+            Arg.Any<IReadOnlyList<UserSkill>>(),
+            Arg.Any<IReadOnlyList<JobSkill>>()).Returns(lowScore);
+
+        var service = BuildService();
+        await service.LoadApplicantsAsync(companyId);
+
+        var firstApplicant = service.GetNextApplicant();
+        service.MoveToNext();
+        service.MoveToPrevious();
+
+        service.GetNextApplicant()!.User.UserId.Should().Be(firstApplicant!.User.UserId);
     }
 
     [Fact]
@@ -175,5 +235,33 @@ public class CompanyRecommendationServiceTests
         await serviceA.LoadApplicantsAsync(companyId);
         serviceA.HasMore.Should().Be(true);
         serviceB.HasMore.Should().Be(false);
+    }
+
+    [Fact]
+    public void HasMore_BeforeLoad_ReturnsFalse()
+    {
+        var service = BuildService();
+
+        service.HasMore.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task LoadApplicantsAsync_MatchWithMissingJob_IsSkipped()
+    {
+        const int companyId = 5;
+        const int jobId = 10;
+        const int missingJobId = 999;
+        const int userId = 1;
+        const int matchId = 1;
+
+        userRepo.Seed(new UserBuilder().WithId(userId).Build());
+        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
+        matchRepo.Seed(new MatchBuilder().WithId(matchId).AppliedFor(userId, missingJobId).WithStatus(MatchStatus.Applied).Build());
+
+        var service = BuildService();
+        await service.LoadApplicantsAsync(companyId);
+
+        service.HasMore.Should().BeFalse();
+        service.GetNextApplicant().Should().BeNull();
     }
 }

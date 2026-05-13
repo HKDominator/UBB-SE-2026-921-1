@@ -92,8 +92,9 @@ public class CompletenessServiceTests
     {
         var user = BuildFullyFilledUser();
         user.PersonalityResult!.SelectedRole = null;
+        const int maximumCompletenessScore = 100;
 
-        service.CalculateCompleteness(user).Should().BeLessThan(100);
+        service.CalculateCompleteness(user).Should().BeLessThan(maximumCompletenessScore);
 
     }
 

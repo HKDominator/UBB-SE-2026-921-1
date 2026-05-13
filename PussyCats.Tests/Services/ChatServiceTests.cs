@@ -2,6 +2,7 @@
 using NSubstitute;
 using PussyCats.App.Services;
 using PussyCats.Library.Domain;
+using PussyCats.Library.Domain.Enums;
 using PussyCats.Library.Repositories.Chats;
 using PussyCats.Library.Repositories.Messages;
 
@@ -328,5 +329,261 @@ namespace PussyCats.Tests.Services
         }
         #endregion
 
+
+        #region SendMessage
+        [Fact]
+        public async Task SendMessageAsync_EmptyOrNullContent_ThrowsArgumentException()
+        {
+            await chatService.Invoking(s => s.SendMessageAsync(1, "   ", 1, MessageType.Text))
+                .Should().ThrowAsync<ArgumentException>();
+        }
+
+        [Fact]
+        public async Task SendMessageAsync_ChatNotFound_ThrowsKeyNotFoundException()
+        {
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns((Chat?)null);
+
+            await chatService.Invoking(s => s.SendMessageAsync(1, "hello", 1, MessageType.Text))
+                .Should().ThrowAsync<KeyNotFoundException>();
+        }
+
+        [Fact]
+        public async Task SendMessageAsync_CallerIsNotParticipant_ThrowsUnauthorizedAccessException()
+        {
+            var chat = new Chat { User = new User { UserId = 2 }, SecondUser = new User { UserId = 3 } };
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns(chat);
+
+            await chatService.Invoking(s => s.SendMessageAsync(1, "hello", 789, MessageType.Text))
+                .Should().ThrowAsync<UnauthorizedAccessException>();
+        }
+
+        [Fact]
+        public async Task SendMessageAsync_BlockedChat_ThrowsInvalidOperationException()
+        {
+            var chat = new Chat { IsBlocked = true, User = new User { UserId = 1 } };
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns(chat);
+
+            await chatService.Invoking(s => s.SendMessageAsync(1, "hello", 1, MessageType.Text))
+                .Should().ThrowAsync<InvalidOperationException>();
+        }
+
+        [Fact]
+        public async Task SendMessageAsync_TextMessageExceedsMaxLength_ThrowsArgumentException()
+        {
+            var chat = new Chat { User = new User { UserId = 1 } };
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns(chat);
+
+            await chatService.Invoking(s => s.SendMessageAsync(1, new string('a', 2001), 1, MessageType.Text))
+                .Should().ThrowAsync<ArgumentException>();
+        }
+
+        [Fact]
+        public async Task SendMessageAsync_ValidTextMessage_AddsMessageToRepository()
+        {
+            var chat = new Chat { User = new User { UserId = 1 } };
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns(chat);
+
+            await chatService.SendMessageAsync(1, "hello", 1, MessageType.Text);
+
+            await messageRepo.Received(1).AddAsync(
+                Arg.Is<Message>(m => m.Content == "hello" && m.Type == MessageType.Text),
+                Arg.Any<CancellationToken>());
+        }
+
+        [Theory]
+        [InlineData(".jpg")]
+        [InlineData(".jpeg")]
+        [InlineData(".png")]
+        [InlineData(".PNG")]
+        public async Task SendMessageAsync_ValidImageMessage_StoresAttachmentAndAddsMessage(string imageExtension)
+        {
+            var chat = new Chat { User = new User { UserId = 1 } };
+            var tempFile = Path.GetTempFileName();
+            var imagePath = Path.ChangeExtension(tempFile, imageExtension);
+            File.Move(tempFile, imagePath);
+            await File.WriteAllBytesAsync(imagePath, new byte[100]);
+
+            try
+            {
+                chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns(chat);
+                fileStorage.SaveFileAsync(Arg.Any<Stream>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+                    .Returns("stored/path.jpg");
+
+                await chatService.SendMessageAsync(1, imagePath, 1, MessageType.Image);
+
+                await messageRepo.Received(1).AddAsync(
+                    Arg.Is<Message>(m => m.Content == "stored/path.jpg" && m.OriginalFileName == Path.GetFileName(imagePath)),
+                    Arg.Any<CancellationToken>());
+            }
+            finally
+            {
+                File.Delete(imagePath);
+            }
+        }
+
+        [Theory]
+        [InlineData(".pdf")]
+        [InlineData(".docx")]
+        [InlineData(".doc")]
+        [InlineData(".DOC")]
+        public async Task SendMessageAsync_ValidFileAttachmentMessage_StoresAttachmentAndAddsMessage(string fileExtension)
+        {
+            var chat = new Chat { User = new User { UserId = 1 } };
+            var tempFile = Path.GetTempFileName();
+            var sentAttachmentPath = Path.ChangeExtension(tempFile, fileExtension);
+            File.Move(tempFile, sentAttachmentPath);
+            await File.WriteAllBytesAsync(sentAttachmentPath, new byte[100]);
+
+            try
+            {
+                chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns(chat);
+                fileStorage.SaveFileAsync(Arg.Any<Stream>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+                    .Returns("stored/path.jpg");
+
+                await chatService.SendMessageAsync(1, sentAttachmentPath, 1, MessageType.File);
+
+                await messageRepo.Received(1).AddAsync(
+                    Arg.Is<Message>(m => m.Content == "stored/path.jpg" && m.OriginalFileName == Path.GetFileName(sentAttachmentPath)),
+                    Arg.Any<CancellationToken>());
+            }
+            finally
+            {
+                File.Delete(sentAttachmentPath);
+            }
+        }
+        #endregion
+
+        [Fact]
+        public async Task OpenMessageAttachmentAsync_EmptyPath_ThrowsArgumentException()
+        {
+            await chatService.Invoking(s => s.OpenMessageAttachmentAsync("   "))
+                .Should().ThrowAsync<ArgumentException>();
+        }
+
+        [Fact]
+        public async Task OpenMessageAttachmentAsync_ValidPath_ReturnsStreamFromStorage()
+        {
+            var stream = new MemoryStream();
+            fileStorage.OpenReadAsync("path/file.jpg", Arg.Any<CancellationToken>())
+                .Returns(stream);
+
+            var result = await chatService.OpenMessageAttachmentAsync("path/file.jpg");
+
+            result.Should().BeSameAs(stream);
+        }
+
+        #region BlockChatAsync and UnblockChatAsync
+
+        [Fact]
+        public async Task BlockChatAsync_ChatNotFound_ThrowsKeyNotFoundException()
+        {
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns((Chat?)null);
+
+            await chatService.Invoking(s => s.BlockChatAsync(1, blockerId: 1))
+                .Should().ThrowAsync<KeyNotFoundException>();
+        }
+
+        [Fact]
+        public async Task BlockChatAsync_CallerIsNotParticipant_ThrowsUnauthorizedAccessException()
+        {
+            var chat = new Chat { User = new User { UserId = 2 }, SecondUser = new User { UserId = 3 } };
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns(chat);
+
+            await chatService.Invoking(s => s.BlockChatAsync(1, blockerId: 99))
+                .Should().ThrowAsync<UnauthorizedAccessException>();
+        }
+
+        [Fact]
+        public async Task BlockChatAsync_ValidRequest_BlocksChatAndUpdatesRepository()
+        {
+            var chat = new Chat { User = new User { UserId = 1 } };
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns(chat);
+
+            await chatService.BlockChatAsync(1, blockerId: 1);
+
+            chat.IsBlocked.Should().BeTrue();
+            chat.BlockedByUser!.UserId.Should().Be(1);
+            chatRepo.Received(1).UpdateAsync(chat, Arg.Any<CancellationToken>());
+        }
+
+        [Fact]
+        public async Task UnblockChatAsync_ChatNotFound_ThrowsKeyNotFoundException()
+        {
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns((Chat?)null);
+
+            await chatService.Invoking(s => s.UnblockChatAsync(1, unblockerId: 1))
+                .Should().ThrowAsync<KeyNotFoundException>();
+        }
+
+
+        [Fact]
+        public async Task UnblockChatAsync_CallerIsNotBlocker_ThrowsUnauthorizedAccessException()
+        {
+            var chat = new Chat { User = new User { UserId = 1 }, SecondUser = new User { UserId = 2 }, BlockedByUser = new User { UserId = 2 } };
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns(chat);
+
+            await chatService.Invoking(s => s.UnblockChatAsync(1, unblockerId: 1))
+                .Should().ThrowAsync<UnauthorizedAccessException>();
+        }
+
+        [Fact]
+        public async Task UnblockChatAsync_ValidRequest_UnblocksChatAndUpdatesRepository()
+        {
+            var chat = new Chat { User = new User { UserId = 1 }, BlockedByUser = new User { UserId = 1 }, IsBlocked = true };
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns(chat);
+
+            await chatService.UnblockChatAsync(1, unblockerId: 1);
+
+            chat.IsBlocked.Should().BeFalse();
+            chat.BlockedByUser.Should().BeNull();
+            chatRepo.Received(1).UpdateAsync(chat, Arg.Any<CancellationToken>());
+        }
+
+        #endregion
+
+        [Fact]
+        public async Task DeleteChatAsync_ChatNotFound_ThrowsKeyNotFoundException()
+        {
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns((Chat?)null);
+
+            await chatService.Invoking(s => s.DeleteChatAsync(1, callerId: 1))
+                .Should().ThrowAsync<KeyNotFoundException>();
+        }
+
+        [Fact]
+        public async Task DeleteChatAsync_CallerIsNotParticipant_ThrowsUnauthorizedAccessException()
+        {
+            var chat = new Chat { User = new User { UserId = 2 }, SecondUser = new User { UserId = 3 } };
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns(chat);
+
+            await chatService.Invoking(s => s.DeleteChatAsync(1, callerId: 99))
+                .Should().ThrowAsync<UnauthorizedAccessException>();
+        }
+
+        [Fact]
+        public async Task DeleteChatAsync_CallerIsUser_SetsDeletedAtByUser()
+        {
+            var chat = new Chat { User = new User { UserId = 1 } };
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns(chat);
+
+            await chatService.DeleteChatAsync(1, callerId: 1);
+
+            chat.DeletedAtByUser.Should().NotBeNull();
+            chat.DeletedAtBySecondParty.Should().BeNull();
+            chatRepo.Received(1).UpdateAsync(chat, Arg.Any<CancellationToken>());
+        }
+
+        [Fact]
+        public async Task DeleteChatAsync_CallerIsSecondParty_SetsDeletedAtBySecondParty()
+        {
+            var chat = new Chat { User = new User { UserId = 1 }, SecondUser = new User { UserId = 2 } };
+            chatRepo.GetByIdAsync(1, Arg.Any<CancellationToken>()).Returns(chat);
+
+            await chatService.DeleteChatAsync(1, callerId: 2);
+
+            chat.DeletedAtBySecondParty.Should().NotBeNull();
+            chat.DeletedAtByUser.Should().BeNull();
+            chatRepo.Received(1).UpdateAsync(chat, Arg.Any<CancellationToken>());
+        }
     }
 }

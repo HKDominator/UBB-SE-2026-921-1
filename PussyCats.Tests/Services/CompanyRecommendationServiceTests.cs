@@ -12,22 +12,22 @@ namespace PussyCats.Tests.Services;
 
 public class CompanyRecommendationServiceTests
 {
-    private readonly FakeMatchRepository matchRepo = new();
-    private readonly FakeJobRepository jobRepo = new();
-    private readonly FakeUserRepository userRepo = new();
-    private readonly FakeUserSkillRepository userSkillRepo = new();
-    private readonly FakeJobSkillRepository jobSkillRepo = new();
+    private readonly FakeMatchRepository matchRepository = new();
+    private readonly FakeJobRepository jobRepository = new();
+    private readonly FakeUserRepository userRepository = new();
+    private readonly FakeUserSkillRepository userSkillRepository = new();
+    private readonly FakeJobSkillRepository jobSkillRepository = new();
     private readonly IRecommendationAlgorithm algorithm = Substitute.For<IRecommendationAlgorithm>();
 
     private CompanyRecommendationService BuildService()
     {
-        var jobService = new JobService(jobRepo);
+        var jobService = new JobService(jobRepository);
         return new CompanyRecommendationService(
-            new MatchService(matchRepo, jobService, new UserService(userRepo)),
-            new UserService(userRepo),
+            new MatchService(matchRepository, jobService, new UserService(userRepository)),
+            new UserService(userRepository),
             jobService,
-            new UserSkillService(userSkillRepo),
-            new JobSkillService(jobSkillRepo),
+            new UserSkillService(userSkillRepository),
+            new JobSkillService(jobSkillRepository),
             algorithm);
     }
 
@@ -49,11 +49,11 @@ public class CompanyRecommendationServiceTests
         const int firstCompanyId = 5, secondCompanyId = 99;
         const int firstJobId = 10, secondJobId = 20;
         const double compaitibilityScore = 50.0;
-        userRepo.Seed(new UserBuilder().WithId(firstUserId).Build(), new UserBuilder().WithId(secondUserId).Build());
-        jobRepo.Seed(
+        userRepository.Seed(new UserBuilder().WithId(firstUserId).Build(), new UserBuilder().WithId(secondUserId).Build());
+        jobRepository.Seed(
             new JobBuilder().WithId(firstJobId).WithCompanyId(firstCompanyId).Build(),
             new JobBuilder().WithId(secondJobId).WithCompanyId(secondCompanyId).Build());
-        matchRepo.Seed(
+        matchRepository.Seed(
             new MatchBuilder().WithId(1).AppliedFor(firstUserId, firstJobId).WithStatus(MatchStatus.Applied).Build(),
             new MatchBuilder().WithId(2).AppliedFor(secondUserId, firstJobId).WithStatus(MatchStatus.Rejected).Build(),
             new MatchBuilder().WithId(3).AppliedFor(firstUserId, secondJobId).WithStatus(MatchStatus.Applied).Build());
@@ -73,9 +73,9 @@ public class CompanyRecommendationServiceTests
         const int firstUserId = 1, secondUserId = 2;
         const int jobId = 10, companyId = 5;
         const double compatibilityScoreForFirstUser = 40.0, compatibilityScoreForSecondUser = 80.0;
-        userRepo.Seed(new UserBuilder().WithId(firstUserId).Build(), new UserBuilder().WithId(secondUserId).Build());
-        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
-        matchRepo.Seed(
+        userRepository.Seed(new UserBuilder().WithId(firstUserId).Build(), new UserBuilder().WithId(secondUserId).Build());
+        jobRepository.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
+        matchRepository.Seed(
             new MatchBuilder().WithId(1).AppliedFor(firstUserId, jobId).WithStatus(MatchStatus.Applied).Build(),
             new MatchBuilder().WithId(2).AppliedFor(secondUserId, jobId).WithStatus(MatchStatus.Applied).Build());
         algorithm.CalculateCompatibilityScore(
@@ -104,9 +104,9 @@ public class CompanyRecommendationServiceTests
         const int userId = 1;
         const int jobId = 10, companyId = 5;
         const double compatibilityScore = 50;
-        userRepo.Seed(new UserBuilder().WithId(userId).Build());
-        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
-        matchRepo.Seed(new MatchBuilder().WithId(1).AppliedFor(userId, jobId).WithStatus(MatchStatus.Applied).Build());
+        userRepository.Seed(new UserBuilder().WithId(userId).Build());
+        jobRepository.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
+        matchRepository.Seed(new MatchBuilder().WithId(1).AppliedFor(userId, jobId).WithStatus(MatchStatus.Applied).Build());
         algorithm.CalculateCompatibilityScore(default!, default!, default!, default!).ReturnsForAnyArgs(compatibilityScore);
 
         var service = BuildService();
@@ -124,9 +124,9 @@ public class CompanyRecommendationServiceTests
         const int userId = 1, jobId = 10, companyId = 5;
         const double compatibilityScore = 50;
 
-        userRepo.Seed(new UserBuilder().WithId(userId).Build());
-        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
-        matchRepo.Seed(new MatchBuilder().WithId(1).AppliedFor(userId, jobId).WithStatus(MatchStatus.Applied).Build());
+        userRepository.Seed(new UserBuilder().WithId(userId).Build());
+        jobRepository.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
+        matchRepository.Seed(new MatchBuilder().WithId(1).AppliedFor(userId, jobId).WithStatus(MatchStatus.Applied).Build());
         algorithm.CalculateCompatibilityScore(default!, default!, default!, default!).ReturnsForAnyArgs(compatibilityScore);
 
         var service = BuildService();
@@ -165,9 +165,9 @@ public class CompanyRecommendationServiceTests
     {
         const int userId = 1, jobId = 10, companyId = 5;
         const double compatibilityScore = 50;
-        userRepo.Seed(new UserBuilder().WithId(userId).Build());
-        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
-        matchRepo.Seed(new MatchBuilder().WithId(1).AppliedFor(userId, jobId).WithStatus(MatchStatus.Applied).Build());
+        userRepository.Seed(new UserBuilder().WithId(userId).Build());
+        jobRepository.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
+        matchRepository.Seed(new MatchBuilder().WithId(1).AppliedFor(userId, jobId).WithStatus(MatchStatus.Applied).Build());
         algorithm.CalculateCompatibilityScore(default!, default!, default!, default!).ReturnsForAnyArgs(compatibilityScore);
 
         var serviceA = BuildService();

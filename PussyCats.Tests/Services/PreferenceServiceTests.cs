@@ -8,12 +8,12 @@ namespace PussyCats.Tests.Services;
 
 public class PreferenceServiceTests
 {
-    private readonly FakeUserRepository repo = new();
+    private readonly FakeUserRepository userRepository = new();
     private readonly PreferenceService service;
 
     public PreferenceServiceTests()
     {
-        service = new PreferenceService(repo);
+        service = new PreferenceService(userRepository);
     }
 
     [Fact]
@@ -33,7 +33,7 @@ public class PreferenceServiceTests
         user.PreferredEmploymentType = "BackendDeveloper,FrontendDeveloper";
         user.WorkModePreference = "Remote";
         user.LocationPreference = "Cluj-Napoca, Romania";
-        repo.Seed(user);
+        userRepository.Seed(user);
 
         var result = await service.GetByUserIdAsync(1);
 
@@ -49,7 +49,7 @@ public class PreferenceServiceTests
         user.PreferredEmploymentType = string.Empty;
         user.WorkModePreference = "Remote";
         user.LocationPreference = string.Empty;
-        repo.Seed(user);
+        userRepository.Seed(user);
 
         var result = await service.GetByUserIdAsync(1);
 
@@ -61,7 +61,7 @@ public class PreferenceServiceTests
     [Fact]
     public async Task SavePreferencesAsync_ValidPreferencesProvided_WritesCombinedRoleString()
     {
-        repo.Seed(new UserBuilder().WithId(1).Build());
+        userRepository.Seed(new UserBuilder().WithId(1).Build());
 
         await service.SavePreferencesAsync(
             1,
@@ -69,7 +69,7 @@ public class PreferenceServiceTests
             WorkMode.Hybrid,
             "Berlin, Germany");
 
-        var user = await repo.GetByIdAsync(1);
+        var user = await userRepository.GetByIdAsync(1);
         user!.PreferredEmploymentType.Should().Be("BackendDeveloper,DevOpsEngineer");
         user.WorkModePreference.Should().Be("Hybrid");
         user.LocationPreference.Should().Be("Berlin, Germany");

@@ -9,20 +9,20 @@ namespace PussyCats.Tests.Services;
 
 public class CompanyStatusServiceTests
 {
-    private readonly FakeMatchRepository matchRepo = new();
-    private readonly FakeJobRepository jobRepo = new();
-    private readonly FakeUserRepository userRepo = new();
-    private readonly FakeUserSkillRepository userSkillRepo = new();
+    private readonly FakeMatchRepository matchRepository = new();
+    private readonly FakeJobRepository jobRepository = new();
+    private readonly FakeUserRepository userRepository = new();
+    private readonly FakeUserSkillRepository userSkillRepository = new();
     private readonly CompanyStatusService service;
 
     public CompanyStatusServiceTests()
     {
-        var jobService = new JobService(jobRepo);
+        var jobService = new JobService(jobRepository);
         service = new CompanyStatusService(
-            new MatchService(matchRepo, jobService, new UserService(userRepo)),
-            new UserService(userRepo),
+            new MatchService(matchRepository, jobService, new UserService(userRepository)),
+            new UserService(userRepository),
             jobService,
-            new UserSkillService(userSkillRepo));
+            new UserSkillService(userSkillRepository));
     }
 
     [Fact]
@@ -30,9 +30,9 @@ public class CompanyStatusServiceTests
     {
         const int firstUserId = 1, secondUserId = 2;
         const int jobId = 10, companyId = 5;
-        userRepo.Seed(new UserBuilder().WithId(firstUserId).Build(), new UserBuilder().WithId(secondUserId).Build());
-        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
-        matchRepo.Seed(
+        userRepository.Seed(new UserBuilder().WithId(firstUserId).Build(), new UserBuilder().WithId(secondUserId).Build());
+        jobRepository.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
+        matchRepository.Seed(
             new MatchBuilder().WithId(1).AppliedFor(firstUserId, jobId).WithStatus(MatchStatus.Applied).Build(),
             new MatchBuilder().WithId(2).AppliedFor(secondUserId, jobId).WithStatus(MatchStatus.Accepted).Build());
 
@@ -49,9 +49,9 @@ public class CompanyStatusServiceTests
     {
         const int firstUserId = 1, secondUserId = 2;
         const int jobId = 10, companyId = 5;
-        userRepo.Seed(new UserBuilder().WithId(firstUserId).Build(), new UserBuilder().WithId(secondUserId).Build());
-        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
-        matchRepo.Seed(
+        userRepository.Seed(new UserBuilder().WithId(firstUserId).Build(), new UserBuilder().WithId(secondUserId).Build());
+        jobRepository.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
+        matchRepository.Seed(
             new MatchBuilder().WithId(1).AppliedFor(firstUserId, jobId).WithStatus(MatchStatus.Advanced).Build(),
             new MatchBuilder().WithId(2).AppliedFor(secondUserId, jobId).WithStatus(MatchStatus.Rejected).Build());
 
@@ -66,8 +66,8 @@ public class CompanyStatusServiceTests
     {
         const int jobId = 10, companyId = 5;
         const int nonExistentUserId = 99;
-        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
-        matchRepo.Seed(new MatchBuilder()
+        jobRepository.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
+        matchRepository.Seed(new MatchBuilder()
             .WithId(1)
             .AppliedFor(nonExistentUserId, jobId)
             .WithStatus(MatchStatus.Accepted)
@@ -85,14 +85,14 @@ public class CompanyStatusServiceTests
         const int jobId = 10, companyId = 5;
         const int skillId = 1, firstUserScore = 60, secondUserScore = 90;
 
-        userRepo.Seed(
+        userRepository.Seed(
             new UserBuilder().WithId(firstUserId).WithCity(firstUserCity).Build(),
             new UserBuilder().WithId(secondUserId).WithCity(secondUserCity).Build());
-        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).WithLocation("Bucharest, Romania").Build());
-        userSkillRepo.Seed(
+        jobRepository.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).WithLocation("Bucharest, Romania").Build());
+        userSkillRepository.Seed(
             new UserSkill { User = new User { UserId = firstUserId }, Skill = new Skill { SkillId = skillId }, Score = firstUserScore },
             new UserSkill { User = new User { UserId = secondUserId }, Skill = new Skill { SkillId = skillId }, Score = secondUserScore });
-        matchRepo.Seed(
+        matchRepository.Seed(
             new MatchBuilder().WithId(1).AppliedFor(firstUserId, jobId).WithStatus(MatchStatus.Accepted).Build(),
             new MatchBuilder().WithId(2).AppliedFor(secondUserId, jobId).WithStatus(MatchStatus.Accepted).Build());
 
@@ -108,12 +108,12 @@ public class CompanyStatusServiceTests
     {
         const int userId = 1, jobId = 10, companyId = 5, skillId = 1, userSkillScore = 50;
         const string city = "Bucharest", jobLocation = "Bucharest, Romania";
-        userRepo.Seed(new UserBuilder().WithId(userId).WithCity(city).Build());
-        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).WithLocation(jobLocation).Build());
+        userRepository.Seed(new UserBuilder().WithId(userId).WithCity(city).Build());
+        jobRepository.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).WithLocation(jobLocation).Build());
 
-        userSkillRepo.Seed(new UserSkill { User = new User { UserId = userId }, Skill = new Skill { SkillId = skillId }, Score = userSkillScore });
+        userSkillRepository.Seed(new UserSkill { User = new User { UserId = userId }, Skill = new Skill { SkillId = skillId }, Score = userSkillScore });
 
-        matchRepo.Seed(new MatchBuilder().WithId(1).AppliedFor(userId, jobId).WithStatus(MatchStatus.Accepted).Build());
+        matchRepository.Seed(new MatchBuilder().WithId(1).AppliedFor(userId, jobId).WithStatus(MatchStatus.Accepted).Build());
 
         var result = await service.GetApplicantsForCompanyAsync(companyId);
 
@@ -127,9 +127,9 @@ public class CompanyStatusServiceTests
     {
         const int userId = 1, jobId = 10, companyId = 5;
         const int matchId = 1;
-        userRepo.Seed(new UserBuilder().WithId(userId).Build());
-        jobRepo.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
-        matchRepo.Seed(new MatchBuilder().WithId(matchId).AppliedFor(userId, jobId).WithStatus(MatchStatus.Accepted).Build());
+        userRepository.Seed(new UserBuilder().WithId(userId).Build());
+        jobRepository.Seed(new JobBuilder().WithId(jobId).WithCompanyId(companyId).Build());
+        matchRepository.Seed(new MatchBuilder().WithId(matchId).AppliedFor(userId, jobId).WithStatus(MatchStatus.Accepted).Build());
 
         var result = await service.GetApplicantByMatchIdAsync(companyId, matchId);
 

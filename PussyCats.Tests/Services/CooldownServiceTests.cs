@@ -7,13 +7,13 @@ namespace PussyCats.Tests.Services;
 
 public class CooldownServiceTests
 {
-    private readonly FakeRecommendationRepository repo = new();
+    private readonly FakeRecommendationRepository recommendationRepository = new();
     private readonly CooldownService service;
     private readonly TimeSpan cooldown = TimeSpan.FromHours(24);
 
     public CooldownServiceTests()
     {
-        service = new CooldownService(repo, cooldown);
+        service = new CooldownService(recommendationRepository, cooldown);
     }
 
     [Fact]
@@ -26,7 +26,7 @@ public class CooldownServiceTests
     public async Task IsOnCooldownAsync_RecommendationWithinCooldownPeriod_ReturnsTrue()
     {
         var currentDate = DateTime.UtcNow;
-        repo.Seed(new Recommendation
+        recommendationRepository.Seed(new Recommendation
         {
             RecommendationId = 1,
             User = new User { UserId = 1 },
@@ -41,7 +41,7 @@ public class CooldownServiceTests
     public async Task IsOnCooldownAsync_RecommendationOlderThanCooldown_ReturnsFalse()
     {
         var currentDate = DateTime.UtcNow;
-        repo.Seed(new Recommendation
+        recommendationRepository.Seed(new Recommendation
         {
             RecommendationId = 1,
             User = new User { UserId = 1 },
@@ -56,7 +56,7 @@ public class CooldownServiceTests
     public async Task IsOnCooldownAsync_MultipleRecommendationsExist_UsesLatestTimestamp()
     {
         var currentDate = DateTime.UtcNow;
-        repo.Seed(
+        recommendationRepository.Seed(
             new Recommendation { RecommendationId = 1, User = new User { UserId = 1 }, Job = new Job { JobId = 10 }, Timestamp = currentDate.AddDays(-7) },
             new Recommendation { RecommendationId = 2, User = new User { UserId = 1 }, Job = new Job { JobId = 10 }, Timestamp = currentDate.AddMinutes(-10) });
 
@@ -66,11 +66,11 @@ public class CooldownServiceTests
     [Fact]
     public async Task Cooldown_ZeroOrNegativeTimeSpanProvided_FallsBackToDefault24Hours()
     {
-        var zeroService = new CooldownService(repo, TimeSpan.Zero);
-        var negativeService = new CooldownService(repo, TimeSpan.FromHours(-1));
+        var zeroService = new CooldownService(recommendationRepository, TimeSpan.Zero);
+        var negativeService = new CooldownService(recommendationRepository, TimeSpan.FromHours(-1));
 
         var now = DateTime.UtcNow;
-        repo.Seed(new Recommendation { RecommendationId = 1, User = new User { UserId = 1 }, Job = new Job { JobId = 10 }, Timestamp = now.AddHours(-12) });
+        recommendationRepository.Seed(new Recommendation { RecommendationId = 1, User = new User { UserId = 1 }, Job = new Job { JobId = 10 }, Timestamp = now.AddHours(-12) });
 
         (await negativeService.IsOnCooldownAsync(1, 10, now)).Should().BeTrue();
         (await zeroService.IsOnCooldownAsync(1, 10, now)).Should().BeTrue();

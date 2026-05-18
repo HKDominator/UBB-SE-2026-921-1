@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PussyCats.Library.Domain;
-using PussyCats.Library.Repositories.Skills;
+using PussyCats.Library.Services.Skills;
 
 namespace PussyCats.Api.Controllers;
 
@@ -8,9 +8,9 @@ namespace PussyCats.Api.Controllers;
 [Route("api/skills")]
 public class SkillsController : ControllerBase
 {
-    private readonly ISkillRepository skills;
+    private readonly ISkillService skills;
 
-    public SkillsController(ISkillRepository skills)
+    public SkillsController(ISkillService skills)
     {
         this.skills = skills;
     }

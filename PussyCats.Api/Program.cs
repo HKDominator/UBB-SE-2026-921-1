@@ -13,6 +13,7 @@ using PussyCats.Library.Repositories.Skills;
 using PussyCats.Library.Repositories.SkillTests;
 using PussyCats.Library.Repositories.Users;
 using System.Text.Json.Serialization;
+using PussyCats.Library.Services.Skills;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
@@ -41,6 +42,7 @@ builder.Services.AddScoped<IMatchRepository, MatchRepository>();
 builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<ISkillRepository, SkillRepository>();
+builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<IJobSkillRepository, JobSkillRepository>();
 builder.Services.AddScoped<IUserSkillRepository, UserSkillRepository>();
 builder.Services.AddScoped<ISkillGroupRepository, SkillGroupRepository>();

@@ -1,6 +1,6 @@
 using PussyCats.Library.Domain;
 
-namespace PussyCats_App.Services.CompanyService;
+namespace PussyCats.Library.Services.CompanyService;
 
 public interface ICompanyService
 {

@@ -1,7 +1,7 @@
 using PussyCats.Library.Domain;
 using PussyCats.Library.Repositories.Companies;
 
-namespace PussyCats_App.Services.CompanyService;
+namespace PussyCats.Library.Services.CompanyService;
 
 public class CompanyService : ICompanyService
 {

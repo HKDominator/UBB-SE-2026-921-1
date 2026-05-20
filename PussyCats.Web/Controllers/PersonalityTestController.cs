@@ -45,7 +45,7 @@ public class PersonalityTestController : Controller
             return RedirectToAction(nameof(Take));
 
         var questions = PersonalityTestService.LoadQuestions()
-            .ToDictionary(q => q.SortOrder.ToString());
+            .ToDictionary(question => question.SortOrder.ToString());
 
         var answers = new Dictionary<Question, AnswerValue>();
         foreach (var (key, answerValue) in submitModel.Answers)
@@ -63,11 +63,11 @@ public class PersonalityTestController : Controller
         var model = new SelectRoleModel
         {
             Answers = submitModel.Answers,
-            TopRoles = topRoles.Select(r => new RoleOption
+            TopRoles = topRoles.Select(role => new RoleOption
             {
-                Role = r.Key,
-                DisplayName = r.Key.ToString(),
-                Score = r.Value,
+                Role = role.Key,
+                DisplayName = role.Key.ToString(),
+                Score = role.Value,
             }).ToList(),
         };
 
@@ -80,7 +80,7 @@ public class PersonalityTestController : Controller
     public async Task<IActionResult> SaveResult(PersonalityTestSubmitModel submitModel, JobRole selectedRole, CancellationToken ct)
     {
         var questions = PersonalityTestService.LoadQuestions()
-            .ToDictionary(q => q.SortOrder.ToString());
+            .ToDictionary(question => question.SortOrder.ToString());
 
         var answers = new Dictionary<Question, AnswerValue>();
         foreach (var (key, answerValue) in submitModel.Answers)

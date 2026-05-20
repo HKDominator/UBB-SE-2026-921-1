@@ -50,7 +50,7 @@ public class PersonalityTestController : ControllerBase
         [FromBody] CalculateTraitScoresRequest request)
     {
         var questions = PersonalityTestService.LoadQuestions()
-            .ToDictionary(q => q.QuestionText);
+            .ToDictionary(question => question.QuestionText);
 
         var answers = new Dictionary<Question, AnswerValue>();
         foreach (var (questionText, answerValue) in request.Answers)

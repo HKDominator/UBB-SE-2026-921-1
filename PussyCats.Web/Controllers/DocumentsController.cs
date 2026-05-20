@@ -1,14 +1,15 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PussyCats.Library.Domain;
 using PussyCats.Library.Services.Documents;
 
 namespace PussyCats.Web.Controllers;
 
+//[Authorize]
 public class DocumentsController : Controller
 {
     private readonly IDocumentService service;
     private readonly IWebHostEnvironment environment;
-    private const int MockUserId = 1; // Mock user ID
 
     public DocumentsController(IDocumentService service, IWebHostEnvironment environment)
     {
@@ -120,9 +121,9 @@ public class DocumentsController : Controller
         Directory.CreateDirectory(uploadsFolder);
 
         var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
-        var filePath = Path.Combine(uploadsFolder, fileName);
+        var fullPath = Path.Combine(uploadsFolder, fileName);
 
-        using (var stream = new FileStream(filePath, FileMode.Create))
+        using (var stream = new FileStream(fullPath, FileMode.Create))
         {
             await file.CopyToAsync(stream);
         }
@@ -130,4 +131,5 @@ public class DocumentsController : Controller
         return Path.Combine("uploads", fileName).Replace("\\", "/");
     }
 }
+
 

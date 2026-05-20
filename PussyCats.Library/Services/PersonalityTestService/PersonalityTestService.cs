@@ -2,7 +2,7 @@ using PussyCats.Library.Domain;
 using PussyCats.Library.Domain.Enums;
 using PussyCats.Library.Repositories.PersonalityTests;
 
-namespace PussyCats_App.Services.PersonalityTestService;
+namespace PussyCats.Library.Services.PersonalityTestService;
 
 public class PersonalityTestService : IPersonalityTestService
 {
@@ -28,7 +28,7 @@ public class PersonalityTestService : IPersonalityTestService
         questions.AddRange(GetAbstractionTraitQuestions(Make));
         return questions.AsReadOnly();
     }
-
+    public async Task<PersonalityTestResult?> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default) => await personalityTestRepository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
     private static List<Question> GetVisibilityTraitQuestions(Func<string, TraitType, Question> make)
     {
         return

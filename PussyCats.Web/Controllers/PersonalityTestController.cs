@@ -32,15 +32,15 @@ public class PersonalityTestController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Submit(Dictionary<int, int> answers)
+    public async Task<IActionResult> Submit(Dictionary<int, int> answers, CancellationToken cancellationToken)
     {
         var questions = PersonalityTestService.LoadQuestions();
 
         var answersDict = questions
             .Where(question => answers.ContainsKey(question.SortOrder))
-            .ToDictionary(question => question, q => (AnswerValue)answers[q.SortOrder]);
+            .ToDictionary(question => question, question => (AnswerValue)answers[question.SortOrder]);
         //replace also here userdId with auth
-        var top = await service.CalculateAsync(1, answersDict, CancellationToken.None);
+        var top = await service.CalculateAsync(1, answersDict, cancellationToken);
 
         var model = new SelectRoleModel
         {
@@ -59,7 +59,7 @@ public class PersonalityTestController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> SaveResult(SelectRoleModel model, CancellationToken ct)
+    public async Task<IActionResult> SaveResult(SelectRoleModel model, CancellationToken cancellationToken)
     {
         //replace after auth
         var userId = 1; 
@@ -69,7 +69,7 @@ public class PersonalityTestController : Controller
             .Where(q => model.Answers.ContainsKey(q.SortOrder))
             .ToDictionary(q => q, q => (AnswerValue)model.Answers[q.SortOrder]);
 
-        await service.SaveResultAsync(userId, answersDict, model.SelectedRole, ct);
+        await service.SaveResultAsync(userId, answersDict, model.SelectedRole, cancellationToken);
 
         return RedirectToAction(nameof(Index));
     }

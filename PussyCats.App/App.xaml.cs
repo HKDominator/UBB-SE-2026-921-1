@@ -39,6 +39,7 @@ using PussyCats_App.Services.UserProfileService;
 using PussyCats_App.Services.UserRecommendationService;
 using PussyCats_App.Services.UserSkillService;
 using PussyCats_App.Services.UserStatusService;
+using PussyCats.App.ServiceProxies;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -68,7 +69,7 @@ public partial class App : Application
         var services = new ServiceCollection();
         ConfigureServices(services);
         serviceProvider = services.BuildServiceProvider();
-        AssertRepositoryProxyRegistrations();
+        AssertRepositoryProxyRegistrations();//todo: remove after removing all repoProxies
     }
 
     /// <summary>
@@ -88,6 +89,9 @@ public partial class App : Application
         services.AddSingleton(apiConfiguration);
         services.AddSingleton<SessionContext>();
 
+
+        //todo: delete repoProxies when all services have been replaced with serviceProxies
+        //todo: until them, they are needed in other service calls
         RegisterRepositoryProxy<IUserRepository, UserRepositoryProxy>(services, apiConfiguration);
         RegisterRepositoryProxy<IJobRepository, JobRepositoryProxy>(services, apiConfiguration);
         RegisterRepositoryProxy<IMatchRepository, MatchRepositoryProxy>(services, apiConfiguration);
@@ -109,8 +113,10 @@ public partial class App : Application
         services.AddTransient<IChatService, ChatService>();
         services.AddSingleton<IDeveloperService, DeveloperService>();
 
+
+        RegisterServiceProxy<ICompanyService,CompanyServiceProxy>(services, apiConfiguration);
+
         services.AddTransient<ICompanyRecommendationService, CompanyRecommendationService>();
-        services.AddTransient<ICompanyService, CompanyService>();
         services.AddTransient<ICompanyStatusService, CompanyStatusService>();
         services.AddTransient<ICompatibilityService, CompatibilityService>();
         services.AddTransient<ICompletenessService, CompletenessService>();
@@ -146,6 +152,16 @@ public partial class App : Application
         where TProxy : class, TRepository
     {
         services.AddHttpClient<TRepository, TProxy>(client =>
+            client.BaseAddress = new Uri(apiConfiguration.BaseUrl));
+    }
+
+    private static void RegisterServiceProxy<TService, TProxy>(
+        IServiceCollection services,
+        ApiConfiguration apiConfiguration)
+        where TService : class
+        where TProxy : class, TService
+    {
+        services.AddHttpClient<TService, TProxy>(client =>
             client.BaseAddress = new Uri(apiConfiguration.BaseUrl));
     }
 

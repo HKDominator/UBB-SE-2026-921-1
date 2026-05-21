@@ -29,6 +29,7 @@ using PussyCats.Library.Services.SkillTests;
 using PussyCats.Library.Services.UserProfileService;
 using PussyCats.Library.Services.UserRecommendationService;
 using PussyCats.Library.Services.Users;
+using PussyCats.Library.Services.UserSkillService;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
 
@@ -100,6 +101,8 @@ builder.Services.AddScoped<ICooldownService>(provider =>
         TimeSpan.FromHours(24) 
     ));
 
+
+builder.Services.AddScoped<IUserSkillService, UserSkillService>();
 
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<IPreferenceService, PreferenceService>();

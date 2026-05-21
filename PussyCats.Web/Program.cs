@@ -12,6 +12,7 @@ using PussyCats.Library.Services.SkillTests;
 using PussyCats.Library.Services.UserProfileService;
 using PussyCats.Library.Services.UserRecommendationService;
 using PussyCats.Library.Services.Users;
+using PussyCats.Library.Services.UserSkillService;
 using PussyCats.Web.Configuration;
 using PussyCats.Web.ServiceProxies;
 
@@ -69,6 +70,10 @@ RegisterServiceProxy<IUserProfileService, UserProfileServiceProxy>(builder.Servi
 RegisterServiceProxy<IUserRecommendationService, UserRecommendationServiceProxy>(builder.Services, apiConfig);
 RegisterServiceProxy<IUserService, UserServiceProxy>(builder.Services, apiConfig);
 
+builder.Services.AddHttpClient<IUserSkillService, UserSkillServiceProxy>(client =>
+{
+    client.BaseAddress = new Uri(apiConfig.BaseUrl);
+});
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

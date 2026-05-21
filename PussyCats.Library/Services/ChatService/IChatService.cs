@@ -1,7 +1,7 @@
 using PussyCats.Library.Domain;
 using PussyCats.Library.Domain.Enums;
 
-namespace PussyCats_App.Services.ChatService;
+namespace PussyCats.Library.Services.ChatService;
 
 public interface IChatService
 {

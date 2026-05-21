@@ -1,7 +1,8 @@
 using PussyCats.Library.Domain;
+using PussyCats.Library.Helpers;
 using PussyCats.Library.Repositories.Companies;
 
-namespace PussyCats_App.Services.CompanyService;
+namespace PussyCats.Library.Services.CompanyService;
 
 public class CompanyService : ICompanyService
 {
@@ -14,7 +15,9 @@ public class CompanyService : ICompanyService
 
     public async Task<Company?> GetByIdAsync(int companyId, CancellationToken cancellationToken = default)//TODO
     {
-        return await companyRepository.GetByIdAsync(companyId, cancellationToken).ConfigureAwait(false);
+        var company= await companyRepository.GetByIdAsync(companyId, cancellationToken).ConfigureAwait(false);
+        DebugToFile.Write("Service","company is "+company);
+        return company;
     }
 
     public async Task<IReadOnlyList<Company>> GetAllAsync(CancellationToken cancellationToken = default)

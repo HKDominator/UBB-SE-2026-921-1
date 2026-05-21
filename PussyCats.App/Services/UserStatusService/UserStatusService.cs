@@ -2,9 +2,9 @@ using PussyCats.Library.Domain;
 using PussyCats.Library.DTOs;
 using PussyCats.Library.Repositories.Matches;
 using PussyCats.Library.Services.Jobs;
-using PussyCats_App.Services.CompanyService;
 using PussyCats_App.Services.JobSkillService;
 using PussyCats_App.Services.UserSkillService;
+using PussyCats.Library.Services.CompanyService;
 
 namespace PussyCats_App.Services.UserStatusService;
 

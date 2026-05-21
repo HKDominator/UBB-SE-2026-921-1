@@ -2,13 +2,13 @@ using PussyCats.Library.Domain;
 using PussyCats.Library.Domain.Enums;
 using PussyCats.Library.Repositories.Chats;
 using PussyCats.Library.Repositories.Messages;
+using PussyCats.Library.Services.CompanyService;
 using PussyCats.Library.Services.FileStorage;
 using PussyCats.Library.Services.Users;
-using PussyCats_App.Services.CompanyService;
 
-namespace PussyCats_App.Services.ChatService;
+namespace PussyCats.Library.Services.ChatService;
 
-public sealed class ChatService : IChatService
+public class ChatService : IChatService
 {
     private static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
     {

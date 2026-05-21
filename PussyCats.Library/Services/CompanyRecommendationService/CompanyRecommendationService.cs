@@ -10,9 +10,6 @@ using PussyCats.Library.Services.UserSkillService;
 
 namespace PussyCats.Library.Services.CompanyRecommendationService;
 
-// Holds per-session state (rankedApplicants, currentApplicantIndex). Must be registered as
-// Transient or per-view-model in DI — see Phase 5. Sharing across users
-// would leak applicants between sessions.
 public class CompanyRecommendationService : ICompanyRecommendationService
 {
     private readonly IMatchService matchService;

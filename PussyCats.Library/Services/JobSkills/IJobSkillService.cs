@@ -1,6 +1,6 @@
 using PussyCats.Library.Domain;
 
-namespace PussyCats_App.Services.JobSkillService;
+namespace PussyCats.Library.Services.JobSkills;
 
 public interface IJobSkillService
 {

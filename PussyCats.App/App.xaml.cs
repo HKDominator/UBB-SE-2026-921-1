@@ -35,7 +35,7 @@ using PussyCats.Library.Services.CooldownService;
 using PussyCats.Library.Services.CvParsing;
 using PussyCats_App.Services.DeveloperService;
 using PussyCats_App.Services.ImageStorageService;
-using PussyCats_App.Services.JobSkillService;
+using PussyCats.Library.Services.JobSkills;
 using PussyCats_App.Services.LocalFileStorageService;
 using PussyCats_App.Services.PreferenceService;
 using PussyCats.Library.Services.RecommendationAlgorithm;

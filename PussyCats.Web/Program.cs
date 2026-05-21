@@ -3,6 +3,7 @@ using PussyCats.Library.Services.CompanyService;
 using PussyCats.Library.Services.CompletenessService;
 using PussyCats.Library.Services.Documents;
 using PussyCats.Library.Services.Jobs;
+using PussyCats.Library.Services.JobSkills;
 using PussyCats.Library.Services.Matches;
 using PussyCats.Library.Services.PersonalityTestService;
 using PussyCats.Library.Services.Recommendations;
@@ -58,6 +59,7 @@ builder.Services.AddSession(options =>
 RegisterServiceProxy<ICompanyService, CompanyServiceProxy>(builder.Services, apiConfig);
 RegisterServiceProxy<IDocumentService, DocumentServiceProxy>(builder.Services, apiConfig);
 RegisterServiceProxy<IJobService, JobServiceProxy>(builder.Services, apiConfig);
+RegisterServiceProxy<IJobSkillService, JobSkillServiceProxy>(builder.Services, apiConfig);
 RegisterServiceProxy<IMatchService, MatchServiceProxy>(builder.Services, apiConfig);
 RegisterServiceProxy<IPersonalityTestService, PersonalityTestServiceProxy>(builder.Services, apiConfig);
 RegisterServiceProxy<IRecommendationService, RecommendationServiceProxy>(builder.Services, apiConfig);

@@ -10,7 +10,7 @@ using PussyCats.Library.Services.Jobs;
 using PussyCats.Library.Services.Matches;
 using PussyCats.Library.Services.Users;
 using PussyCats_App.Services.CompanyRecommendationService;
-using PussyCats_App.Services.JobSkillService;
+using PussyCats.Library.Services.JobSkills;
 using PussyCats.Library.Services.RecommendationAlgorithm;
 using PussyCats_App.Services.UserSkillService;
 

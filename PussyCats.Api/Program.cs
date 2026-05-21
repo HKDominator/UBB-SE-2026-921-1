@@ -28,6 +28,7 @@ using PussyCats.Library.Services.RecommendationAlgorithm;
 using PussyCats.Library.Services.Recommendations;
 using PussyCats.Library.Services.Skills;
 using PussyCats.Library.Services.SkillTests;
+using PussyCats.Library.Services.SkillGapService;
 using PussyCats.Library.Services.UserProfileService;
 using PussyCats.Library.Services.UserRecommendationService;
 using PussyCats.Library.Services.Users;
@@ -106,6 +107,7 @@ builder.Services.AddScoped<ICooldownService>(provider =>
 
 
 builder.Services.AddScoped<IUserSkillService, UserSkillService>();
+builder.Services.AddScoped<ISkillGapService, SkillGapService>();
 
 builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
 builder.Services.AddScoped<IUserStatusService, UserStatusService>();

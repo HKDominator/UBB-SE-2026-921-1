@@ -1,5 +1,6 @@
 using PussyCats.Library.Domain;
 using PussyCats.Library.Domain.Enums;
+using PussyCats.Library.Helpers;
 using PussyCats.Library.Repositories.Chats;
 using PussyCats.Library.Repositories.Messages;
 using PussyCats.Library.Services.CompanyService;
@@ -127,6 +128,10 @@ public class ChatService : IChatService
         }
 
         var users = await userService.GetAllAsync(cancellationToken).ConfigureAwait(false);
+        foreach (var user in users)
+        {
+            DebugToFile.Write("ChatService", user.ToString());
+        }
         return users
             .Where(user => GetUserName(user).Contains(userNameSearchTerm, StringComparison.OrdinalIgnoreCase))
             .Take(MaxSearchResults)
@@ -315,7 +320,7 @@ public class ChatService : IChatService
                 ? "Image must be less than 10 MB."
                 : "File must be less than 20 MB.");
         }
-
+        DebugToFile.Write("ChatService", $"Storing attachment {sourcePath} of size {fileInfo.Length} bytes.");
         await using var stream = File.OpenRead(sourcePath);
         return await fileStorage.SaveFileAsync(stream, Path.GetFileName(sourcePath), cancellationToken)
             .ConfigureAwait(false);

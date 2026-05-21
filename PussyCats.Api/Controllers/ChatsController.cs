@@ -1,244 +1,161 @@
 using Microsoft.AspNetCore.Mvc;
 using PussyCats.Library.Domain;
 using PussyCats.Library.Domain.Enums;
-using PussyCats.Library.Repositories.Chats;
-using PussyCats.Library.Repositories.Messages;
-using PussyCats.Library.Repositories.Users;
+using PussyCats.Library.Services.ChatService;
 
 namespace PussyCats.Api.Controllers;
 
 [ApiController]
-[Route("api/chats")]
-public class ChatsController : ControllerBase
+[Route("api/[controller]")]
+public class ChatController : ControllerBase
 {
-    private readonly IChatRepository chatRepo;
-    private readonly IMessageRepository messageRepo;
-    private readonly IUserRepository userRepo;
+    private readonly IChatService chatService;
 
-    public ChatsController(
-        IChatRepository chatRepo,
-        IMessageRepository messageRepo,
-        IUserRepository userRepo)
+    public ChatController(IChatService chatService)
     {
-        this.chatRepo = chatRepo;
-        this.messageRepo = messageRepo;
-        this.userRepo = userRepo;
+        this.chatService = chatService;
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetChats(
-        [FromQuery] int? userId,
-        [FromQuery] int? companyId,
-        [FromQuery] int? callerId,
+    [HttpPost("user-company")]
+    public async Task<IActionResult> FindOrCreateUserCompanyChat(
+        [FromQuery] int userId,
+        [FromBody] Company company,
+        [FromQuery] int? jobId,
         CancellationToken cancellationToken)
     {
-        if (userId.HasValue)
-        {
-            var chats = await chatRepo.GetForUserAsync(userId.Value, cancellationToken).ConfigureAwait(false);
-            var enrichCaller = callerId ?? userId.Value;
-            foreach (var chat in chats)
-            {
-                await EnrichChatAsync(chat, enrichCaller, cancellationToken).ConfigureAwait(false);
-            }
-            return Ok(chats);
-        }
-
-        if (companyId.HasValue)
-        {
-            var chats = await chatRepo.GetForCompanyAsync(companyId.Value, cancellationToken).ConfigureAwait(false);
-            var enrichCaller = callerId ?? companyId.Value;
-            foreach (var chat in chats)
-            {
-                await EnrichChatAsync(chat, enrichCaller, cancellationToken).ConfigureAwait(false);
-            }
-            return Ok(chats);
-        }
-
-        return BadRequest("Provide userId or companyId.");
-    }
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
-    {
-        var chat = await chatRepo.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+        var chat = await chatService.FindOrCreateUserCompanyChatAsync(userId, company, cancellationToken: cancellationToken).ConfigureAwait(false);
         return chat is null ? NotFound() : Ok(chat);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> FindOrCreate([FromBody] FindOrCreateChatRequest body, CancellationToken cancellationToken)
+    [HttpPost("user-user")]
+    public async Task<IActionResult> FindOrCreateUserChat(
+        [FromQuery] int userId,
+        [FromQuery] int secondUserId,
+        CancellationToken cancellationToken)
     {
-        if (body.SecondUserId.HasValue)
-        {
-            var existing = await chatRepo.FindUserUserChatAsync(body.UserId, body.SecondUserId.Value, cancellationToken).ConfigureAwait(false);
-            if (existing is not null)
-                return Ok(existing);
+        var chat = await chatService.FindOrCreateUserChatAsync(userId, secondUserId, cancellationToken).ConfigureAwait(false);
+        return chat is null ? NotFound() : Ok(chat);
+    }
 
-            var created = await chatRepo.AddAsync(new Chat { User = await GetUserOrThrowAsync(body.UserId, cancellationToken), SecondUser = await GetUserOrThrowAsync(body.SecondUserId.Value, cancellationToken) }, cancellationToken).ConfigureAwait(false);
-            return CreatedAtAction(nameof(GetById), new { id = created.ChatId }, created);
+    [HttpGet("user/{userId:int}")]
+    public async Task<IActionResult> GetChatsForUser(int userId, CancellationToken cancellationToken)
+    {
+        var chats = await chatService.GetChatsForUserAsync(userId, cancellationToken).ConfigureAwait(false);
+        return Ok(chats);
+    }
+
+    [HttpGet("company/{companyId:int}")]
+    public async Task<IActionResult> GetChatsForCompany(int companyId, CancellationToken cancellationToken)
+    {
+        var chats = await chatService.GetChatsForCompanyAsync(companyId, cancellationToken).ConfigureAwait(false);
+        return Ok(chats);
+    }
+
+    [HttpGet("{chatId:int}/messages")]
+    public async Task<IActionResult> GetMessages(int chatId, [FromQuery] int callerId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var messages = await chatService.GetMessagesAsync(chatId, callerId, cancellationToken).ConfigureAwait(false);
+            return Ok(messages);
         }
+        catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+        catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+    }
 
-        if (body.Company!=null)
+    [HttpGet("search/companies")]
+    public async Task<IActionResult> SearchCompanies([FromQuery] string term, CancellationToken cancellationToken)
+    {
+        var companies = await chatService.SearchCompaniesAsync(term, cancellationToken).ConfigureAwait(false);
+        return Ok(companies);
+    }
+
+    [HttpGet("search/users")]
+    public async Task<IActionResult> SearchUsers([FromQuery] string term, CancellationToken cancellationToken)
+    {
+        var users = await chatService.SearchUsersAsync(term, cancellationToken).ConfigureAwait(false);
+        return Ok(users);
+    }
+
+    [HttpPost("{chatId:int}/messages")]
+    public async Task<IActionResult> SendMessage(
+        int chatId,
+        [FromQuery] int senderId,
+        [FromQuery] MessageType type,
+        [FromBody] string content,
+        CancellationToken cancellationToken)
+    {
+        try
         {
-            var existing = await chatRepo.FindUserCompanyChatAsync(body.UserId, body.Company, body.Job?.JobId, cancellationToken).ConfigureAwait(false);
-            if (existing is not null)
-                return Ok(existing);
-
-            var created = await chatRepo.AddAsync(
-                new Chat { User = await GetUserOrThrowAsync(body.UserId, cancellationToken), Company = body.Company, Job = body.Job },
-                cancellationToken).ConfigureAwait(false);
-            return CreatedAtAction(nameof(GetById), new { id = created.ChatId }, created);
+            await chatService.SendMessageAsync(chatId, content, senderId, type, cancellationToken).ConfigureAwait(false);
+            return NoContent();
         }
-
-        return BadRequest("Provide SecondUserId or CompanyId.");
+        catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+        catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+        catch (InvalidOperationException ex) { return Conflict(ex.Message); }
+        catch (ArgumentException ex) { return BadRequest(ex.Message); }
     }
 
-    [HttpPatch("{id}/block")]
-    public async Task<IActionResult> Block(int id, [FromBody] BlockRequest body, CancellationToken cancellationToken)
+    [HttpGet("{chatId:int}/messages/attachment")]
+    public async Task<IActionResult> GetAttachment([FromQuery] string attachmentPath, CancellationToken cancellationToken)
     {
-        var chat = await chatRepo.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-        if (chat is null)
-            return NotFound();
-
-        chat.IsBlocked = true;
-        //chat.BlockedByUserId = body.BlockerId;
-        chat.BlockedByUser = await GetUserOrThrowAsync(body.BlockerId, cancellationToken);
-        await chatRepo.UpdateAsync(chat, cancellationToken).ConfigureAwait(false);
-        return NoContent();
-    }
-
-    [HttpPatch("{id}/unblock")]
-    public async Task<IActionResult> Unblock(int id, [FromBody] UnblockRequest body, CancellationToken cancellationToken)
-    {
-        var chat = await chatRepo.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-        if (chat is null)
-            return NotFound();
-
-        if (chat.BlockedByUser?.UserId != body.UnblockerId)
-            return Problem(detail: "Only the user who blocked this chat can unblock it.", statusCode: 403);
-
-        chat.IsBlocked = false;
-        chat.BlockedByUser = null;
-        await chatRepo.UpdateAsync(chat, cancellationToken).ConfigureAwait(false);
-        return NoContent();
-    }
-
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id, [FromQuery] int callerId, CancellationToken cancellationToken)
-    {
-        var chat = await chatRepo.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-        if (chat is null)
-            return NotFound();
-
-        if (chat.User.UserId == callerId)
-            chat.DeletedAtByUser = DateTime.UtcNow;
-        else
-            chat.DeletedAtBySecondParty = DateTime.UtcNow;
-
-        await chatRepo.UpdateAsync(chat, cancellationToken).ConfigureAwait(false);
-        return NoContent();
-    }
-
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] Chat body, CancellationToken cancellationToken)
-    {
-        var existing = await chatRepo.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-        if (existing is null)
-            return NotFound();
-
-        existing.IsBlocked = body.IsBlocked;
-        existing.BlockedByUser = body.BlockedByUser;
-        existing.DeletedAtByUser = body.DeletedAtByUser;
-        existing.DeletedAtBySecondParty = body.DeletedAtBySecondParty;
-        await chatRepo.UpdateAsync(existing, cancellationToken).ConfigureAwait(false);
-        return NoContent();
-    }
-
-    [HttpGet("{id}/messages")]
-    public async Task<IActionResult> GetMessages(int id, CancellationToken cancellationToken)
-    {
-        var chat = await chatRepo.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-        if (chat is null)
-            return NotFound();
-
-        var messages = await messageRepo.GetForChatAsync(id, cancellationToken).ConfigureAwait(false);
-        return Ok(messages);
-    }
-
-    [HttpPost("{id}/messages")]
-    public async Task<IActionResult> AddMessage(int id, [FromBody] AddMessageRequest body, CancellationToken cancellationToken)
-    {
-        var chat = await chatRepo.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-        if (chat is null)
-            return NotFound();
-
-        var message = new Message
+        try
         {
-            Chat = new Chat { ChatId = id },
-            Sender = new MessageSender { SenderId = body.SenderId },
-            Content = body.Content,
-            Type = body.Type,
-            OriginalFileName = body.OriginalFileName ?? string.Empty,
-            Timestamp = DateTime.UtcNow,
-            IsRead = false,
-        };
-
-        var saved = await messageRepo.AddAsync(message, cancellationToken).ConfigureAwait(false);
-        return Ok(saved);
-    }
-
-    [HttpGet("{id}/messages/latest")]
-    public async Task<IActionResult> GetLatestMessage(int id, CancellationToken cancellationToken)
-    {
-        var latest = await messageRepo.GetLatestForChatAsync(id, cancellationToken).ConfigureAwait(false);
-        return latest is null ? NotFound() : Ok(latest);
-    }
-
-    [HttpGet("{id}/messages/unread")]
-    public async Task<IActionResult> GetUnreadCount(int id, [FromQuery] int senderId, CancellationToken cancellationToken)
-    {
-        var count = await messageRepo.GetUnreadCountAsync(id, senderId, cancellationToken).ConfigureAwait(false);
-        return Ok(count);
-    }
-
-    [HttpPost("{id}/messages/read")]
-    public async Task<IActionResult> MarkRead(int id, [FromQuery] int readerId, CancellationToken cancellationToken)
-    {
-        var chat = await chatRepo.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-        if (chat is null)
-            return NotFound();
-
-        await messageRepo.MarkAsReadAsync(id, readerId, cancellationToken).ConfigureAwait(false);
-        return NoContent();
-    }
-
-    private async Task EnrichChatAsync(Chat chat, int callerId, CancellationToken cancellationToken)
-    {
-        var latest = await messageRepo.GetLatestForChatAsync(chat.ChatId, cancellationToken).ConfigureAwait(false);
-        if (latest is not null)
-        {
-            chat.LastMessage = latest.Type == MessageType.Text
-                ? latest.Content
-                : (!string.IsNullOrEmpty(latest.OriginalFileName)
-                    ? latest.OriginalFileName
-                    : Path.GetFileName(latest.Content));
-            chat.LastMessageSnippet = chat.LastMessage.Length > 60
-                ? chat.LastMessage[..57] + "..."
-                : chat.LastMessage;
-            chat.LastMessageTime = latest.Timestamp.ToLocalTime().Date == DateTime.Now.Date
-                ? latest.Timestamp.ToLocalTime().ToString("HH:mm")
-                : latest.Timestamp.ToLocalTime().ToString("dd MMM");
+            var stream = await chatService.OpenMessageAttachmentAsync(attachmentPath, cancellationToken).ConfigureAwait(false);
+            var contentType = Path.GetExtension(attachmentPath).ToLowerInvariant() switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".pdf" => "application/pdf",
+                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ".doc" => "application/msword",
+                _ => "application/octet-stream"
+            };
+            return File(stream, contentType, Path.GetFileName(attachmentPath));
         }
-        chat.UnreadCount = await messageRepo.GetUnreadCountAsync(chat.ChatId, callerId, cancellationToken).ConfigureAwait(false);
+        catch (FileNotFoundException ex) { return NotFound(ex.Message); }
     }
 
-    public record FindOrCreateChatRequest(int UserId, Company? Company, int? SecondUserId, Job? Job);
-    public record BlockRequest(int BlockerId);
-    public record UnblockRequest(int UnblockerId);
-    public record AddMessageRequest(int SenderId, string Content, MessageType Type, string? OriginalFileName);
-
-    private async Task<User> GetUserOrThrowAsync(int userId, CancellationToken cancellationToken)
+    [HttpPost("{chatId:int}/messages/read")]
+    public async Task<IActionResult> MarkMessagesAsRead(int chatId, [FromQuery] int readerId, CancellationToken cancellationToken)
     {
-        var user = await userRepo.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
-        return user ?? throw new KeyNotFoundException($"User {userId} not found.");
+        await chatService.MarkMessagesAsReadAsync(chatId, readerId, cancellationToken).ConfigureAwait(false);
+        return NoContent();
+    }
+
+    [HttpPost("{chatId:int}/block")]
+    public async Task<IActionResult> BlockChat(int chatId, [FromQuery] int blockerId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await chatService.BlockChatAsync(chatId, blockerId, cancellationToken).ConfigureAwait(false);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+        catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+    }
+
+    [HttpPost("{chatId:int}/unblock")]
+    public async Task<IActionResult> UnblockChat(int chatId, [FromQuery] int unblockerId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await chatService.UnblockChatAsync(chatId, unblockerId, cancellationToken).ConfigureAwait(false);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+        catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+    }
+
+    [HttpDelete("{chatId:int}")]
+    public async Task<IActionResult> DeleteChat(int chatId, [FromQuery] int callerId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await chatService.DeleteChatAsync(chatId, callerId, cancellationToken).ConfigureAwait(false);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+        catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
     }
 }

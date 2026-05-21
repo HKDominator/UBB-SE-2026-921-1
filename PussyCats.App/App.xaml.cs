@@ -115,6 +115,7 @@ public partial class App : Application
 
 
         RegisterServiceProxy<ICompanyService,CompanyServiceProxy>(services, apiConfiguration);
+        RegisterServiceProxy<IChatService,ChatServiceProxy>(services, apiConfiguration);
 
         services.AddTransient<ICompanyRecommendationService, CompanyRecommendationService>();
         services.AddTransient<ICompanyStatusService, CompanyStatusService>();

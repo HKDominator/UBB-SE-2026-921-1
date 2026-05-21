@@ -13,6 +13,7 @@ using PussyCats.Library.Repositories.Recommendations;
 using PussyCats.Library.Repositories.Skills;
 using PussyCats.Library.Repositories.SkillTests;
 using PussyCats.Library.Repositories.Users;
+using PussyCats.Library.Services.ChatService;
 using PussyCats.Library.Services.CompanyService;
 using PussyCats.Library.Services.Documents;
 using PussyCats.Library.Services.FileStorage;
@@ -82,9 +83,8 @@ builder.Services.AddScoped<IPersonalityTestService, PersonalityTestService>();
 builder.Services.AddSingleton<ILocalFileStorageService, StubLocalFileStorageService>();
 builder.Services.AddScoped<ISkillTestService, SkillTestService>();
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
-
 builder.Services.AddScoped<ICompanyService, CompanyService>();
-
+builder.Services.AddScoped<IChatService, ChatService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -20,6 +20,12 @@ public class FilesController : ControllerBase
         Directory.CreateDirectory(legacyAvatarPath);
     }
 
+    /// <summary>
+    /// gets file contents as body
+    /// </summary>
+    /// <returns>
+    /// filepath
+    /// </returns> :
     [HttpPost]
     public async Task<IActionResult> UploadFile(IFormFile file, CancellationToken cancellationToken)
     {
@@ -39,7 +45,10 @@ public class FilesController : ControllerBase
         await using var stream = System.IO.File.Create(fullPath);
         await file.CopyToAsync(stream, cancellationToken);
 
-        return Ok(new { path = fileName });
+        var relativePath = Path.Combine("uploads", "files", fileName)
+            .Replace('\\', '/');
+
+        return Ok(new { path = relativePath });
     }
 
     [HttpGet("{relativeFilePath}")]

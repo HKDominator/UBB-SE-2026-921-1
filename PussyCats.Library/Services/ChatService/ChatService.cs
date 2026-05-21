@@ -138,11 +138,11 @@ public class ChatService : IChatService
             .ToList();
     }
 
-    public async Task SendMessageAsync(int chatId, string content, int senderId, MessageType typeOfMessage, CancellationToken cancellationToken = default)
+    public async Task SendMessageAsync(int chatId, string localPath, int senderId, MessageType typeOfMessage, CancellationToken cancellationToken = default)
     {//todo this should receive a stream instead of a file path for attachments, and the service should handle storing it and passing the storage path to the repository
-        if (string.IsNullOrWhiteSpace(content))
+        if (string.IsNullOrWhiteSpace(localPath))
         {
-            throw new ArgumentException("Message content cannot be empty.", nameof(content));
+            throw new ArgumentException("Message localPath cannot be empty.", nameof(localPath));
         }
 
         var chat = await chatRepository.GetByIdAsync(chatId, cancellationToken).ConfigureAwait(false)
@@ -154,23 +154,23 @@ public class ChatService : IChatService
             throw new InvalidOperationException("Cannot send a message in a blocked chat.");
         }
 
-        if (typeOfMessage == MessageType.Text && content.Length > MaxTextMessageLength)
+        if (typeOfMessage == MessageType.Text && localPath.Length > MaxTextMessageLength)
         {
-            throw new ArgumentException($"Text messages cannot exceed {MaxTextMessageLength} characters.", nameof(content));
+            throw new ArgumentException($"Text messages cannot exceed {MaxTextMessageLength} characters.", nameof(localPath));
         }
 
         var originalFileName = string.Empty;
         if (typeOfMessage != MessageType.Text)
         {
-            originalFileName = Path.GetFileName(content);
-            content = await StoreAttachmentAsync(content, typeOfMessage, cancellationToken).ConfigureAwait(false);
+            originalFileName = Path.GetFileName(localPath);
+            localPath = await StoreAttachmentAsync(localPath, typeOfMessage, cancellationToken).ConfigureAwait(false);
         }
 
         await messageRepository.AddAsync(new Message
         {
             Chat = new Chat { ChatId = chatId },
             Sender = new MessageSender { SenderId = senderId },
-            Content = content.Trim(),
+            Content = localPath.Trim(),
             Timestamp = DateTime.UtcNow,
             Type = typeOfMessage,
             OriginalFileName = originalFileName,
@@ -300,19 +300,22 @@ public class ChatService : IChatService
 
     private async Task<string> StoreAttachmentAsync(string sourcePath, MessageType type, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(sourcePath))
+        var absolutePath= Path.GetFullPath(sourcePath);
+        DebugToFile.Write("ChatService", $"Storing attachment from {absolutePath} for message type {type}.");
+        if (string.IsNullOrWhiteSpace(absolutePath))
         {
-            throw new ArgumentException("Attachment path cannot be empty.", nameof(sourcePath));
+            throw new ArgumentException("Attachment path cannot be empty.", nameof(absolutePath));
         }
 
-        if (!File.Exists(sourcePath))
+        if (!File.Exists(absolutePath))
+
         {
-            throw new FileNotFoundException("Attachment file was not found.", sourcePath);
+            throw new FileNotFoundException("Attachment file was not found.", absolutePath);
         }
 
-        ValidateAttachment(sourcePath, type);
+        ValidateAttachment(absolutePath, type);
 
-        var fileInfo = new FileInfo(sourcePath);
+        var fileInfo = new FileInfo(absolutePath);
         var maxBytes = type == MessageType.Image ? MaxImageBytes : MaxFileBytes;
         if (fileInfo.Length > maxBytes)
         {
@@ -320,9 +323,9 @@ public class ChatService : IChatService
                 ? "Image must be less than 10 MB."
                 : "File must be less than 20 MB.");
         }
-        DebugToFile.Write("ChatService", $"Storing attachment {sourcePath} of size {fileInfo.Length} bytes.");
-        await using var stream = File.OpenRead(sourcePath);
-        return await fileStorage.SaveFileAsync(stream, Path.GetFileName(sourcePath), cancellationToken)
+        DebugToFile.Write("ChatService", $"Storing attachment {absolutePath} of size {fileInfo.Length} bytes.");
+        await using var stream = File.OpenRead(absolutePath);
+        return await fileStorage.SaveFileAsync(stream, Path.GetFileName(absolutePath), cancellationToken)
             .ConfigureAwait(false);
     }
 }

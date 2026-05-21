@@ -832,6 +832,7 @@ public class ChatViewModel : DispatchableObservableObject
         {
             ErrorMessage = exception.Message;
         }
+
     }
 
     public void GoToProfile()

@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using PussyCats.Library.Domain;
 using PussyCats.Library.Domain.Enums;
+using PussyCats.Library.Helpers;
 using PussyCats.Library.Services.ChatService;
 
 namespace PussyCats.Api.Controllers;
@@ -96,12 +98,13 @@ public class ChatController : ControllerBase
         catch (ArgumentException ex) { return BadRequest(ex.Message); }
     }
 
-    [HttpGet("{chatId:int}/messages/attachment")]
+    [HttpGet("messages/attachment")]
     public async Task<IActionResult> GetAttachment([FromQuery] string attachmentPath, CancellationToken cancellationToken)
     {
         try
         {
             var stream = await chatService.OpenMessageAttachmentAsync(attachmentPath, cancellationToken).ConfigureAwait(false);
+            DebugToFile.Write("ChatsController","getAttachment "+attachmentPath+" : "+stream);
             var contentType = Path.GetExtension(attachmentPath).ToLowerInvariant() switch
             {
                 ".jpg" or ".jpeg" => "image/jpeg",

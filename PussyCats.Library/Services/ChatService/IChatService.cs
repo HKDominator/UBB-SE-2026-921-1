@@ -20,7 +20,7 @@ public interface IChatService
 
     Task<IReadOnlyList<User>> SearchUsersAsync(string query, CancellationToken cancellationToken = default);
 
-    Task SendMessageAsync(int chatId, string content, int senderId, MessageType type, CancellationToken cancellationToken = default);
+    Task SendMessageAsync(int chatId, string localPath, int senderId, MessageType type, CancellationToken cancellationToken = default);
 
     Task<Stream> OpenMessageAttachmentAsync(string attachmentPath, CancellationToken cancellationToken = default);
 

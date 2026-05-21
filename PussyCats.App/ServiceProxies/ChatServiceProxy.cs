@@ -66,20 +66,30 @@ public class ChatServiceProxy : IChatService
     //todo handle attachments, send stream
     public async Task SendMessageAsync(int chatId, string content, int senderId, MessageType typeOfMessage, CancellationToken cancellationToken = default)
     {
+        
         if (typeOfMessage != MessageType.Text)
         {
-            await using var stream = File.OpenRead(content);
-            content = await fileStorageService.SaveFileAsync(stream, Path.GetFileName(content), cancellationToken).ConfigureAwait(false);
+            var localPath = content;
+            await using var stream = File.OpenRead(localPath);
+            var serverRelativePath = await fileStorageService.SaveFileAsync(stream, Path.GetFileName(localPath), cancellationToken).ConfigureAwait(false);//this returns filepath
+            
+            var response = await http.PostAsJsonAsync(
+                $"api/chat/{chatId}/messages?senderId={senderId}&type={typeOfMessage}",
+                serverRelativePath, JsonOptions.Default, cancellationToken).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
         }
-
-        var response = await http.PostAsJsonAsync(
-            $"api/chat/{chatId}/messages?senderId={senderId}&type={typeOfMessage}",
-            content, JsonOptions.Default, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        else
+        {
+            var response = await http.PostAsJsonAsync(
+                $"api/chat/{chatId}/messages?senderId={senderId}&type={typeOfMessage}",
+                content, JsonOptions.Default, cancellationToken).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+        }
     }
 
     public async Task<Stream> OpenMessageAttachmentAsync(string attachmentPath, CancellationToken cancellationToken = default)
     {
+        //todo maybe add chatId and validate that the attachment belongs to a message in that chat and that the user has access to it, to avoid unauthorized access to files
         var response = await http.GetAsync($"api/chat/messages/attachment?attachmentPath={Uri.EscapeDataString(attachmentPath)}", cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 

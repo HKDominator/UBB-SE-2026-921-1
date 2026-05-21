@@ -1,0 +1,26 @@
+using System.Net.Http.Json;
+using PussyCats.Library.Domain.Enums;
+using PussyCats.Library.DTOs;
+using PussyCats.Library.Services.CompatibilityService;
+
+namespace PussyCats.Web.ServiceProxies;
+
+public class CompatibilityServiceProxy : ICompatibilityService
+{
+    private readonly HttpClient http;
+
+    public CompatibilityServiceProxy(HttpClient http) => this.http = http;
+
+    public async Task<IReadOnlyList<RoleResult>> CalculateAllAsync(int userId, CancellationToken cancellationToken = default)
+        => await http.GetFromJsonAsync<List<RoleResult>>($"api/compatibility/{userId}/all", cancellationToken)
+           ?? new List<RoleResult>();
+
+    public async Task<RoleResult> CalculateForRoleAsync(int userId, JobRole role, CancellationToken cancellationToken = default)
+    {
+        var response = await http.GetAsync($"api/compatibility/{userId}/role/{role}", cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<RoleResult>(cancellationToken: cancellationToken))!;
+    }
+
+    public IReadOnlyList<Suggestion> GetSuggestions(RoleResult result) => result.Suggestions;
+}

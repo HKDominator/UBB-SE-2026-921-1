@@ -46,7 +46,7 @@ using PussyCats.Library.Services.SkillTests;
 using PussyCats.Library.Services.UserProfileService;
 using PussyCats.Library.Services.UserRecommendationService;
 
-using PussyCats_App.Services.UserSkillService;
+using PussyCats.Library.Services.UserSkillService;
 using PussyCats_App.Services.UserStatusService;
 
 // To learn more about WinUI, the WinUI project structure,

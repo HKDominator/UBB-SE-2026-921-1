@@ -5,7 +5,7 @@ using PussyCats.Tests.Fakes;
 using PussyCats.Tests.Helpers;
 using PussyCats.Library.Services.Jobs;
 using PussyCats.Library.Services.JobSkills;
-using PussyCats_App.Services.UserSkillService;
+using PussyCats.Library.Services.UserSkillService;
 using PussyCats_App.Services.UserStatusService;
 using PussyCats.Library.Services.CompanyService;
 

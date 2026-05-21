@@ -40,12 +40,12 @@ public class PersonalityTestServiceProxy : IPersonalityTestService
 
     public IReadOnlyDictionary<TraitType, double> CalculateTraitScores(IReadOnlyDictionary<Question, AnswerValue> personalityTestAnswers)
     {
-        // Convertim Question -> QuestionText pentru a se potrivi cu DTO-ul din controller
+        
         var payload = new
         {
             Answers = personalityTestAnswers.ToDictionary(
-                kvp => kvp.Key.QuestionText,
-                kvp => kvp.Value)
+                answerQuestionPair => answerQuestionPair.Key.QuestionText,
+                answerQuestionPair => answerQuestionPair.Value)
         };
 
         var response = http
@@ -95,8 +95,8 @@ public class PersonalityTestServiceProxy : IPersonalityTestService
         var payload = new
         {
             Answers = answers.ToDictionary(
-                kvp => kvp.Key.QuestionText,
-                kvp => kvp.Value),
+                answerQuestionPair => answerQuestionPair.Key.QuestionText,
+                answerQuestionPair => answerQuestionPair.Value),
             SelectedRole = selectedRole,
         };
 

@@ -13,6 +13,7 @@ using PussyCats.Library.Repositories.Skills;
 using PussyCats.Library.Repositories.SkillTests;
 using PussyCats.Library.Repositories.Users;
 using PussyCats.Library.Services.CooldownService;
+using PussyCats.Library.Services.CompanyService;
 using PussyCats.Library.Services.Documents;
 using PussyCats.Library.Services.FileStorage;
 using PussyCats.Library.Services.Jobs;
@@ -93,6 +94,7 @@ builder.Services.AddScoped<ICooldownService>(provider =>
     ));
 
 
+builder.Services.AddScoped<ICompanyService, CompanyService>();
 
 var app = builder.Build();
 

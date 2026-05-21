@@ -1,5 +1,5 @@
 using PussyCats.Library.Domain;
-using PussyCats_App.Services.CompanyService;
+using PussyCats.Library.Services.CompanyService;
 
 namespace PussyCats.App.ViewModels;
 

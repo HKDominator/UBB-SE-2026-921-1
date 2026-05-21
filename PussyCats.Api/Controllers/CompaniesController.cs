@@ -1,66 +1,65 @@
 using Microsoft.AspNetCore.Mvc;
 using PussyCats.Library.Domain;
-using PussyCats.Library.Repositories.Companies;
-using PussyCats.Library.Repositories.Jobs;
+using PussyCats.Library.Helpers;
+using PussyCats.Library.Services.CompanyService;
 
 namespace PussyCats.Api.Controllers;
 
 [ApiController]
-[Route("api/companies")]
-public class CompaniesController : ControllerBase
+[Route("api/[controller]")]
+public class CompanyController : ControllerBase
 {
-    private readonly ICompanyRepository companies;
-    private readonly IJobRepository jobs;
+    private readonly ICompanyService companyService;
 
-    public CompaniesController(ICompanyRepository companies, IJobRepository jobs)
+    public CompanyController(ICompanyService companyService)
     {
-        this.companies = companies;
-        this.jobs = jobs;
+        this.companyService = companyService;
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
-        => Ok(await companies.GetAllAsync(cancellationToken));
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(IReadOnlyList<Company>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
-        var company = await companies.GetByIdAsync(id, cancellationToken);
+        var companies = await companyService.GetAllAsync(cancellationToken).ConfigureAwait(false);
+        return Ok(companies);
+    }
+
+    [HttpGet("{id:int}")]
+    [ProducesResponseType(typeof(Company), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetByIdAsync([FromRoute] int id, CancellationToken cancellationToken)
+    {
+        var company = await companyService.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+        DebugToFile.Write("Controller",$"GetByIdAsync: Retrieved company with ID {id}: {(company != null ? company.CompanyName : "Not Found")}");
         return company is null ? NotFound() : Ok(company);
     }
 
-    [HttpGet("{id}/jobs")]
-    public async Task<IActionResult> GetJobs(int id, CancellationToken cancellationToken)
-    {
-        if (await companies.GetByIdAsync(id, cancellationToken) is null)
-            return NotFound();
-        return Ok(await jobs.GetByCompanyIdAsync(id, cancellationToken));
-    }
-
     [HttpPost]
-    public async Task<IActionResult> Add([FromBody] Company company, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(Company), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> AddAsync([FromBody] Company company, CancellationToken cancellationToken)
     {
-        company.CompanyId = 0;
-        var saved = await companies.AddAsync(company, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id = saved.CompanyId }, saved);
+        var createdCompany = await companyService.AddAsync(company, cancellationToken).ConfigureAwait(false);
+        return CreatedAtRoute("GetById", new { id = createdCompany.CompanyId }, createdCompany);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] Company company, CancellationToken cancellationToken)
+    [HttpPut("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] Company company, CancellationToken cancellationToken)
     {
-        if (await companies.GetByIdAsync(id, cancellationToken) is null)
-            return NotFound();
-        company.CompanyId = id;
-        await companies.UpdateAsync(company, cancellationToken);
+        if (id != company.CompanyId)
+            return BadRequest("Route id does not match the company id in the request body.");
+
+        await companyService.UpdateAsync(company, cancellationToken).ConfigureAwait(false);
         return NoContent();
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Remove(int id, CancellationToken cancellationToken)
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> RemoveAsync([FromRoute] int id, CancellationToken cancellationToken)
     {
-        if (await companies.GetByIdAsync(id, cancellationToken) is null)
-            return NotFound();
-        await companies.RemoveAsync(id, cancellationToken);
+        await companyService.RemoveAsync(id, cancellationToken).ConfigureAwait(false);
         return NoContent();
     }
 }

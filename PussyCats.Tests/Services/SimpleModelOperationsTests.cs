@@ -2,6 +2,7 @@ using FluentAssertions;
 using PussyCats.Library.Services;
 using PussyCats.Library.Domain;
 using PussyCats.Library.Domain.Enums;
+using PussyCats.Library.Services;
 
 namespace PussyCats.Tests.Services;
 

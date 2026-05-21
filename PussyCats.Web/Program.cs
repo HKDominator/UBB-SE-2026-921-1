@@ -1,3 +1,4 @@
+using PussyCats.Library.Services.CompanyService;
 using PussyCats.Library.Services.CompletenessService;
 using PussyCats.Library.Services.Documents;
 using PussyCats.Library.Services.Jobs;
@@ -32,6 +33,20 @@ builder.Services.AddControllersWithViews(options =>
     .AddJsonOptions(opt =>
         opt.JsonSerializerOptions.Converters.Add(
             new System.Text.Json.Serialization.JsonStringEnumConverter()));
+
+static void RegisterServiceProxy<TService, TProxy>(
+    IServiceCollection services,
+    ApiConfiguration apiConfiguration)
+    where TService : class
+    where TProxy : class, TService
+{
+    services.AddHttpClient<TService, TProxy>(client =>
+        client.BaseAddress = new Uri(apiConfiguration.BaseUrl));
+}
+
+
+RegisterServiceProxy<ICompanyService, CompanyServiceProxy>(builder.Services, apiConfig);
+
 
 builder.Services.AddHttpClient<ISkillService, SkillServiceProxy>(client =>
 {

@@ -1,4 +1,4 @@
-namespace PussyCats.App.Configuration;
+namespace PussyCats.Library.Configuration;
 
 public static class PredefinedLocations
 {

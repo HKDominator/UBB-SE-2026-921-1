@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using PussyCats.App.Configuration;
 using PussyCats.Library.Domain.Enums;
-using PussyCats_App.Services.PreferenceService;
+using PussyCats.Library.Services.Preferences;
 
 namespace PussyCats.App.ViewModels;
 

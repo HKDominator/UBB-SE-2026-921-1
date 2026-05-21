@@ -21,6 +21,7 @@ using PussyCats.Library.Services.Jobs;
 using PussyCats.Library.Services.JobSkills;
 using PussyCats.Library.Services.Matches;
 using PussyCats.Library.Services.PersonalityTestService;
+using PussyCats.Library.Services.Preferences;
 using PussyCats.Library.Services.RecommendationAlgorithm;
 using PussyCats.Library.Services.Recommendations;
 using PussyCats.Library.Services.Skills;
@@ -101,6 +102,7 @@ builder.Services.AddScoped<ICooldownService>(provider =>
 
 
 builder.Services.AddScoped<ICompanyService, CompanyService>();
+builder.Services.AddScoped<IPreferenceService, PreferenceService>();
 
 var app = builder.Build();
 

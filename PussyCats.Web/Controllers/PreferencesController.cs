@@ -1,0 +1,64 @@
+using Microsoft.AspNetCore.Mvc;
+using PussyCats.Library.Services.Preferences;
+using PussyCats.Web.Models;
+
+namespace PussyCats.Web.Controllers;
+
+//[Authorize]
+public class PreferencesController : Controller
+{
+    // Swap with claims-based identity once Dev 1's auth scaffolding lands.
+    private const int CurrentUserId = 1;
+
+    private readonly IPreferenceService preferences;
+
+    public PreferencesController(IPreferenceService preferences)
+    {
+        this.preferences = preferences;
+    }
+
+    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    {
+        var prefs = await preferences.GetByUserIdAsync(CurrentUserId, cancellationToken);
+        return View(prefs);
+    }
+
+    public async Task<IActionResult> Edit(CancellationToken cancellationToken)
+    {
+        var prefs = await preferences.GetByUserIdAsync(CurrentUserId, cancellationToken);
+        var model = new PreferencesEditModel
+        {
+            SelectedRoles = prefs.Roles.ToList(),
+            WorkMode = prefs.WorkMode,
+            Location = prefs.Location,
+        };
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(PreferencesEditModel model, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        try
+        {
+            await preferences.SavePreferencesAsync(
+                CurrentUserId,
+                model.SelectedRoles,
+                model.WorkMode,
+                model.Location ?? string.Empty,
+                cancellationToken);
+        }
+        catch (HttpRequestException ex)
+        {
+            ModelState.AddModelError(string.Empty, ex.Message);
+            return View(model);
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+}

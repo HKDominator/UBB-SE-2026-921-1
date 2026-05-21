@@ -3,7 +3,7 @@ using FluentAssertions;
 using PussyCats.Library.Domain.Enums;
 using PussyCats.Tests.Fakes;
 using PussyCats.Tests.Helpers;
-using PussyCats_App.Services.PreferenceService;
+using PussyCats.Library.Services.Preferences;
 
 namespace PussyCats.Tests.Services;
 

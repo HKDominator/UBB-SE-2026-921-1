@@ -6,10 +6,10 @@ using PussyCats.Library.Repositories.Recommendations;
 using PussyCats.Library.Repositories.Skills;
 using PussyCats.Library.Repositories.Users;
 using PussyCats.Library.Services.Matches;
-using PussyCats_App.Services.CooldownService;
-using PussyCats_App.Services.RecommendationAlgorithm;
+using PussyCats.Library.Services.CooldownService;
+using PussyCats.Library.Services.RecommendationAlgorithm;
 
-namespace PussyCats_App.Services.UserRecommendationService;
+namespace PussyCats.Library.Services.UserRecommendationService;
 
 public sealed class UserRecommendationService : IUserRecommendationService
 {

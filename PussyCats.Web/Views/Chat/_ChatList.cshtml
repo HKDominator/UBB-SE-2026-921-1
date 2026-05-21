@@ -1,0 +1,35 @@
+@using PussyCats.Library.Domain
+@model IEnumerable<Chat>
+
+<div class="list-group list-group-flush">
+    @foreach (var chat in Model)
+    {
+        var name = chat.SecondUser?.Name ?? chat.Company?.CompanyName ?? chat.User.Name;
+        var initials = !string.IsNullOrEmpty(name) ? string.Join("", name.Split(' ').Select(n => n[0])).ToUpper() : "??";
+        if (initials.Length > 2) initials = initials.Substring(0, 2);
+        
+        var subtitle = chat.Job?.JobTitle ?? (chat.SecondUser != null ? "User" : "Company");
+        
+        <button type="button" class="list-group-item list-group-item-action py-3 border-0" 
+                onclick="selectChat(@chat.ChatId, '@name', '@initials', '@subtitle', @chat.IsBlocked.ToString().ToLower())">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center fw-bold me-3 flex-shrink-0" style="width: 48px; height: 48px;">
+                    @initials
+                </div>
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="d-flex justify-content-between align-items-baseline">
+                        <h6 class="mb-0 fw-bold text-truncate">@name</h6>
+                        <small class="text-muted" style="font-size: 0.7rem;">@chat.LastMessageTime</small>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <p class="mb-0 text-muted small text-truncate">@chat.LastMessageSnippet</p>
+                        @if (chat.UnreadCount > 0)
+                        {
+                            <span class="badge rounded-pill bg-primary ms-2">@chat.UnreadCount</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </button>
+    }
+</div>

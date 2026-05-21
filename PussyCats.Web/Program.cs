@@ -1,6 +1,9 @@
+using PussyCats.Api.Services;
+using PussyCats.Library.Services.ChatService;
 using PussyCats.Library.Services.CompanyService;
 using PussyCats.Library.Services.CompletenessService;
 using PussyCats.Library.Services.Documents;
+using PussyCats.Library.Services.FileStorage;
 using PussyCats.Library.Services.Jobs;
 using PussyCats.Library.Services.PersonalityTestService;
 using PussyCats.Library.Services.Recommendations;
@@ -41,7 +44,8 @@ static void RegisterServiceProxy<TService, TProxy>(
 
 
 RegisterServiceProxy<ICompanyService, CompanyServiceProxy>(builder.Services, apiConfig);
-
+RegisterServiceProxy<IChatService,ChatServiceProxy>(builder.Services,apiConfig);
+RegisterServiceProxy<ILocalFileStorageService,FileStorageServiceProxy>(builder.Services,apiConfig);
 
 builder.Services.AddHttpClient<ISkillService, SkillServiceProxy>(client =>
 {

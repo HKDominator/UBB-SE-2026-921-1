@@ -1,0 +1,179 @@
+@using PussyCats.Library.Domain
+@using PussyCats.Library.Domain.Enums
+@model IEnumerable<Chat>
+@{
+    ViewData["Title"] = "Messages";
+    var mode = (AppMode)ViewBag.Mode;
+}
+
+<div class="container-fluid h-100 p-0 overflow-hidden" style="height: calc(100vh - 56px) !important;">
+    <div class="row h-100 g-0">
+        <!-- Sidebar -->
+        <div class="col-md-4 col-lg-3 border-end bg-light d-flex flex-column h-100">
+            <div class="p-3 border-bottom bg-white">
+                <h5 class="mb-3 fw-bold">Messages</h5>
+                
+                @if (mode == AppMode.Candidate)
+                {
+                    <div class="btn-group w-100 mb-3" role="group">
+                        <input type="radio" class="btn-check" name="tab-mode" id="btnUsers" autocomplete="off" checked onclick="loadChatList('Users')">
+                        <label class="btn btn-outline-primary btn-sm" for="btnUsers">Users</label>
+                        <input type="radio" class="btn-check" name="tab-mode" id="btnCompanies" autocomplete="off" onclick="loadChatList('Company')">
+                        <label class="btn btn-outline-primary btn-sm" for="btnCompanies">Companies</label>
+                    </div>
+                }
+
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="text" id="chatSearch" class="form-control bg-light border-start-0" placeholder="Search conversations...">
+                </div>
+                <div id="searchResults" class="list-group list-group-flush position-absolute w-100 shadow-sm d-none" style="z-index: 1000; left: 0;"></div>
+            </div>
+
+            <div id="chatListContainer" class="flex-grow-1 overflow-auto">
+                @await Html.PartialAsync("_ChatList", Model)
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="col-md-8 col-lg-9 d-flex flex-column h-100 bg-white">
+            <div id="chatPlaceholder" class="m-auto text-center text-muted p-5">
+                <i class="bi bi-chat-dots display-1 mb-3"></i>
+                <h5>No chat selected</h5>
+                <p>Select a conversation from the list to start messaging</p>
+            </div>
+
+            <div id="activeChat" class="d-none flex-column h-100">
+                <!-- Chat Header -->
+                <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div id="headerAvatar" class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold me-3" style="width: 40px; height: 40px;">
+                            ??
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center">
+                                <h6 id="headerName" class="mb-0 fw-bold me-2">Name</h6>
+                                <span id="blockedBadge" class="badge rounded-pill bg-danger d-none">Blocked</span>
+                            </div>
+                            <small id="headerSubtitle" class="text-muted">Subtitle</small>
+                        </div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-link text-muted p-0" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical fs-5"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="viewProfile()">View Profile</a></li>
+                            <li class="dropdown-divider"></li>
+                            <li><a id="blockAction" class="dropdown-item text-danger" href="#" onclick="toggleBlock()">Block</a></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteChat()">Delete Chat</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div id="messageHistory" class="flex-grow-1 p-3 overflow-auto bg-light">
+                    <!-- Messages will be loaded here -->
+                </div>
+
+                <!-- Input Area -->
+                <div class="p-3 border-top">
+                    <div class="input-group">
+                        <button class="btn btn-outline-secondary" type="button"><i class="bi bi-paperclip"></i></button>
+                        <input type="text" id="messageInput" class="form-control" placeholder="Type a message...">
+                        <button class="btn btn-primary" type="button" onclick="sendMessage()"><i class="bi bi-send"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let currentChatId = null;
+    let currentTab = 'Users';
+
+    function loadChatList(tab) {
+        currentTab = tab;
+        $.get('/Chat/GetChatList', { tab: tab }, function(data) {
+            $('#chatListContainer').html(data);
+        });
+    }
+
+    function selectChat(chatId, name, initials, subtitle, isBlocked) {
+        currentChatId = chatId;
+        $('#chatPlaceholder').addClass('d-none');
+        $('#activeChat').removeClass('d-none').addClass('d-flex');
+        
+        $('#headerName').text(name);
+        $('#headerAvatar').text(initials);
+        $('#headerSubtitle').text(subtitle);
+        
+        if (isBlocked) {
+            $('#blockedBadge').removeClass('d-none');
+            $('#blockAction').text('Unblock');
+            $('#messageInput').prop('disabled', true);
+        } else {
+            $('#blockedBadge').addClass('d-none');
+            $('#blockAction').text('Block');
+            $('#messageInput').prop('disabled', false);
+        }
+
+        loadMessages();
+    }
+
+    function loadMessages() {
+        if (!currentChatId) return;
+        $.get('/Chat/GetMessages', { chatId: currentChatId }, function(data) {
+            $('#messageHistory').html(data);
+            scrollToBottom();
+        });
+    }
+
+    function sendMessage() {
+        const content = $('#messageInput').val();
+        if (!content || !currentChatId) return;
+
+        $.post('/Chat/SendMessage', { chatId: currentChatId, content: content }, function() {
+            $('#messageInput').val('');
+            loadMessages();
+            loadChatList(currentTab);
+        });
+    }
+
+    function scrollToBottom() {
+        const history = document.getElementById('messageHistory');
+        history.scrollTop = history.scrollHeight;
+    }
+
+    // Refresh messages every 3 seconds
+    setInterval(loadMessages, 3000);
+
+    // Search logic
+    $('#chatSearch').on('input', function() {
+        const query = $(this).val();
+        if (query.length < 2) {
+            $('#searchResults').addClass('d-none');
+            return;
+        }
+
+        $.get('/Chat/Search', { query: query, tab: currentTab }, function(results) {
+            let html = '';
+            results.forEach(r => {
+                html += `<button type="button" class="list-group-item list-group-item-action py-2" onclick="startChat(${r.id}, '${r.type}')">
+                            <div class="fw-bold small">${r.name}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">${r.type}</div>
+                         </button>`;
+            });
+            $('#searchResults').html(html).removeClass('d-none');
+        });
+    });
+
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#chatSearch').length) {
+            $('#searchResults').addClass('d-none');
+        }
+    });
+</script>
+}

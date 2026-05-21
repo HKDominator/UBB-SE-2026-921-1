@@ -4,4 +4,5 @@ public record ApiConfiguration(string BaseUrl)
 {
     // TODO: remove when auth is implemented
     public int TemporaryCompanyId { get; init; } = 1;
+    public int TemporaryUserId { get; init; } = 1;
 }

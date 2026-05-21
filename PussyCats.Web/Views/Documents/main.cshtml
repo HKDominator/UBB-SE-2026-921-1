@@ -1,12 +1,11 @@
-@model IReadOnlyList<PussyCats.Library.Domain.Document>
+﻿@model IReadOnlyList<PussyCats.Library.Domain.Document>
 @{
     ViewData["Title"] = "Documents Management";
-    var fileUrls = ViewBag.FileUrls as Dictionary<int, string> ?? new Dictionary<int, string>();
 }
 
 <div class="container py-4" style="max-width: 900px;">
 
-    <!-- Top Alert Notification Area -->
+    <!-- Top Alert Notification Area (Bootstrap Alert) -->
     @if (ViewBag.StatusMessage != null)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -15,7 +14,7 @@
         </div>
     }
 
-    <!-- Upload Document Form Card Block -->
+    <!-- Upload Document Form Card Block (Bootstrap Card with Background Utilities) -->
     <div class="card border-0 bg-dark text-white mb-5 rounded-3 p-2">
         <div class="card-body">
             <h5 class="card-title fw-bold mb-4">Upload Document</h5>
@@ -25,17 +24,19 @@
 
                 <div class="mb-3" style="max-width: 400px;">
                     <label for="txtDocumentName" class="form-label small fw-semibold">Document Name</label>
-                    <input type="text" name="documentName" id="txtDocumentName" class="form-control" 
+                    <input type="text" name="documentName" id="txtDocumentName" class="form-control"
                            placeholder="e.g. AWS Certificate 2024" required />
                 </div>
 
                 <div class="mb-3">
+                    <!-- Bootstrap styled custom-looking file browser element -->
                     <label class="btn btn-light btn-sm me-2" for="filePicker">Browse File...</label>
                     <input type="file" name="file" id="filePicker" accept=".pdf,.jpg,.png" class="d-none" required />
                     <span id="selectedFileLabel" class="small text-white-50">No file selected</span>
                     <div class="form-text text-white-50 small mt-1">Accepted formats: PDF, JPG, PNG</div>
                 </div>
 
+                <!-- Validation Output Context -->
                 @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ContainsKey("file"))
                 {
                     <div class="text-warning small fw-bold mb-3">
@@ -48,7 +49,7 @@
         </div>
     </div>
 
-    <!-- Uploaded Documents List Section -->
+    <!-- Uploaded Documents List Section (Bootstrap Flexbox & Background Utilities) -->
     <div class="mb-3">
         <h5 class="fw-bold mb-3">Uploaded Documents</h5>
 
@@ -71,19 +72,12 @@
                         </div>
 
                         <div class="d-flex gap-2">
-                            <!-- Direct Asset Link — Resolves route issue completely -->
-                            @if (fileUrls.ContainsKey(doc.DocumentId) && fileUrls[doc.DocumentId] != "#")
-                            {
-                                <a href="@fileUrls[doc.DocumentId]" target="_blank" rel="noopener noreferrer" 
-                                   class="btn btn-white btn-sm border text-dark px-3">View</a>
-                            }
-                            else
-                            {
-                                <button type="button" class="btn btn-white btn-sm border text-muted px-3" disabled>Unavailable</button>
-                            }
+                            <!-- View Link -->
+                            <a asp-action="ViewFile" asp-route-id="@doc.DocumentId" target="_blank"
+                               class="btn btn-white btn-sm border text-dark px-3">View</a>
                             
                             <!-- Delete Modal Trigger Button -->
-                            <button type="button" class="btn btn-white btn-sm border text-dark px-3" 
+                            <button type="button" class="btn btn-white btn-sm border text-dark px-3"
                                     onclick="confirmDeletion('@doc.DocumentId', '@System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(doc.DocumentName)')">
                                 Delete
                             </button>
@@ -95,7 +89,7 @@
     </div>
 </div>
 
-<!-- Bootstrap Deletion Confirmation Modal -->
+<!-- Web Equivalent of XAML ContentDialog (Pure Bootstrap Modal) -->
 <div class="modal fade" id="deleteConfirmationModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
         <div class="modal-content border-0 shadow">
@@ -120,11 +114,13 @@
 
 @section Scripts {
     <script>
+        // Update browser file display matching standard XAML property updates
         document.getElementById('filePicker').addEventListener('change', function (e) {
             const fileName = e.target.files[0] ? e.target.files[0].name : "No file selected";
             document.getElementById('selectedFileLabel').textContent = fileName;
         });
 
+        // Initialize and trigger the Bootstrap Modal via standard API methods
         function confirmDeletion(id, documentName) {
             document.getElementById('deleteDocumentId').value = id;
             document.getElementById('deleteModalMessage').innerHTML = `Are you sure you want to delete "<strong>${documentName}</strong>"?`;

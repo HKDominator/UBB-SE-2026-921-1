@@ -2,134 +2,110 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PussyCats.Library.Domain;
 using PussyCats.Library.Services.Documents;
+using PussyCats.Web.Configuration;
 
 namespace PussyCats.Web.Controllers;
 
-//[Authorize]
 public class DocumentsController : Controller
 {
     private readonly IDocumentService service;
-    private readonly IWebHostEnvironment environment;
+    private readonly int DefaultUserId;
 
-    public DocumentsController(IDocumentService service, IWebHostEnvironment environment)
+    public DocumentsController(IDocumentService service, ApiConfiguration config)
     {
         this.service = service;
-        this.environment = environment;
+        DefaultUserId=config.TemporaryUserId;
     }
 
+    [HttpGet]
     public async Task<IActionResult> Index(CancellationToken ct)
-        => View(await service.GetAllAsync(ct));
-
-    public async Task<IActionResult> Details(int id, CancellationToken ct)
     {
-        var document = await service.GetByIdAsync(id, ct);
-        return document is null ? NotFound() : View(document);
-    }
-
-    public IActionResult Create() => View();
-
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(string documentName, IFormFile? file, CancellationToken ct)
-    {
-        if (string.IsNullOrWhiteSpace(documentName))
+        if (TempData["UploadError"] != null)
         {
-            ModelState.AddModelError(nameof(documentName), "Document name is required.");
-            return View();
+            ModelState.AddModelError("file", TempData["UploadError"].ToString()!);
+        }
+        if (TempData["StatusMessage"] != null)
+        {
+            ViewBag.StatusMessage = TempData["StatusMessage"].ToString();
         }
 
-        string filePath = "documents/default.txt";
+        var documents = await service.GetDocumentsByUserIdAsync(DefaultUserId, ct);
 
-        if (file != null && file.Length > 0)
+        // Resolve target file URLs ahead of time for direct browser downloading/viewing
+        var fileUrlMapping = new Dictionary<int, string>();
+        foreach (var doc in documents)
         {
             try
             {
-                filePath = await SaveFileAsync(file);
+                var fullPath = await service.GetDocumentPathAsync(doc.DocumentId, ct);
+                fileUrlMapping[doc.DocumentId] = fullPath;
             }
-            catch (Exception ex)
+            catch
             {
-                ModelState.AddModelError("file", $"Error uploading file: {ex.Message}");
-                return View();
+                fileUrlMapping[doc.DocumentId] = "#"; // Fallback placeholder if missing
             }
         }
 
-        var document = new Document
-        {
-            DocumentName = documentName,
-            FilePath = filePath,
-            User = new User { UserId = 0 }
-        };
-
-        await service.AddAsync(document, ct);
-        return RedirectToAction(nameof(Index));
+        ViewBag.FileUrls = fileUrlMapping;
+        return View(documents);
     }
 
-    public async Task<IActionResult> Edit(int id, CancellationToken ct)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Upload(string documentName, IFormFile? file, CancellationToken ct)
     {
-        var document = await service.GetByIdAsync(id, ct);
-        return document is null ? NotFound() : View(document);
-    }
-
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, string documentName, IFormFile? file, CancellationToken ct)
-    {
-        var document = await service.GetByIdAsync(id, ct);
-        if (document is null) return NotFound();
-
-        if (id != document.DocumentId) return BadRequest();
-
         if (string.IsNullOrWhiteSpace(documentName))
         {
-            ModelState.AddModelError(nameof(documentName), "Document name is required.");
-            return View(document);
+            TempData["UploadError"] = "Document name is required.";
+            return RedirectToAction(nameof(Index));
         }
 
-        document.DocumentName = documentName;
-
-        if (file != null && file.Length > 0)
+        if (file == null || file.Length == 0)
         {
-            try
-            {
-                document.FilePath = await SaveFileAsync(file);
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("file", $"Error uploading file: {ex.Message}");
-                return View(document);
-            }
+            TempData["UploadError"] = "Please select a valid file to upload.";
+            return RedirectToAction(nameof(Index));
         }
 
-        await service.UpdateAsync(document, ct);
+        var allowedExtensions = new[] { ".pdf", ".jpg", ".png" };
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!allowedExtensions.Contains(extension))
+        {
+            TempData["UploadError"] = "Accepted formats are restricted to: PDF, JPG, PNG.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        try
+        {
+            var document = new Document
+            {
+                DocumentName = documentName,
+                User = new User { UserId = DefaultUserId }
+            };
+
+            using var stream = file.OpenReadStream();
+            await service.UploadDocumentAsync(document, stream, file.FileName, ct);
+        }
+        catch (Exception ex)
+        {
+            TempData["UploadError"] = $"Error uploading file to server: {ex.Message}";
+        }
+
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
-        var document = await service.GetByIdAsync(id, ct);
-        return document is null ? NotFound() : View(document);
-    }
-
-    [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int id, CancellationToken ct)
-    {
-        await service.RemoveAsync(id, ct);
-        return RedirectToAction(nameof(Index));
-    }
-
-    private async Task<string> SaveFileAsync(IFormFile file)
-    {
-        var uploadsFolder = Path.Combine(environment.WebRootPath, "uploads");
-        Directory.CreateDirectory(uploadsFolder);
-
-        var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
-        var fullPath = Path.Combine(uploadsFolder, fileName);
-
-        using (var stream = new FileStream(fullPath, FileMode.Create))
+        try
         {
-            await file.CopyToAsync(stream);
+            await service.DeleteDocumentAsync(id, ct);
+        }
+        catch (Exception ex)
+        {
+            TempData["StatusMessage"] = $"Error deleting document: {ex.Message}";
         }
 
-        return Path.Combine("uploads", fileName).Replace("\\", "/");
+        return RedirectToAction(nameof(Index));
     }
 }
-
-

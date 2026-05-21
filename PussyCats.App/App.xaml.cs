@@ -29,7 +29,6 @@ using PussyCats_App.Services.CvParsingService;
 using PussyCats_App.Services.DeveloperService;
 using PussyCats_App.Services.ImageStorageService;
 using PussyCats_App.Services.JobSkillService;
-using PussyCats_App.Services.LocalFileStorageService;
 using PussyCats.Library.Services.PersonalityTestService;
 using PussyCats_App.Services.PreferenceService;
 using PussyCats_App.Services.RecommendationAlgorithm;
@@ -40,6 +39,7 @@ using PussyCats_App.Services.UserRecommendationService;
 using PussyCats_App.Services.UserSkillService;
 using PussyCats_App.Services.UserStatusService;
 using PussyCats.App.ServiceProxies;
+using PussyCats.Library.Services.ImageStorageService;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -107,15 +107,17 @@ public partial class App : Application
         RegisterRepositoryProxy<IChatRepository, ChatRepositoryProxy>(services, apiConfiguration);
         RegisterRepositoryProxy<IMessageRepository, MessageRepositoryProxy>(services, apiConfiguration);
 
-        services.AddHttpClient<IFilesProxy, FilesProxy>(client =>
-            client.BaseAddress = new Uri(apiConfiguration.BaseUrl));
+        // services.AddHttpClient<IFilesProxy, FilesProxy>(client =>
+        //     client.BaseAddress = new Uri(apiConfiguration.BaseUrl));
 
-        services.AddTransient<IChatService, ChatService>();
+        services.AddTransient<IChatService, ChatServiceProxy>();
         services.AddSingleton<IDeveloperService, DeveloperService>();
-
+        
 
         RegisterServiceProxy<ICompanyService,CompanyServiceProxy>(services, apiConfiguration);
         RegisterServiceProxy<IChatService,ChatServiceProxy>(services, apiConfiguration);
+        RegisterServiceProxy<ILocalFileStorageService, FileStorageServiceProxy>(services, apiConfiguration);
+        RegisterServiceProxy<IDocumentService, DocumentServiceProxy>(services, apiConfiguration);
 
         services.AddTransient<ICompanyRecommendationService, CompanyRecommendationService>();
         services.AddTransient<ICompanyStatusService, CompanyStatusService>();
@@ -125,11 +127,9 @@ public partial class App : Application
             provider.GetRequiredService<IRecommendationRepository>(),
             TimeSpan.FromHours(24)));
         services.AddTransient<ICvParsingService, CvParsingService>();
-        services.AddTransient<IDocumentService, DocumentService>();
-        services.AddTransient<IImageStorageService, ImageStorageService>();
+        services.AddTransient<IImageStorageService, ImageStorageService>();//keep as is
         services.AddTransient<IJobService, JobService>();
         services.AddTransient<IJobSkillService, JobSkillService>();
-        services.AddTransient<ILocalFileStorageService, LocalFileStorageService>();
         services.AddTransient<IMatchService, MatchService>();
         services.AddTransient<IPersonalityTestService, PersonalityTestService>();
         services.AddTransient<IPreferenceService, PreferenceService>();

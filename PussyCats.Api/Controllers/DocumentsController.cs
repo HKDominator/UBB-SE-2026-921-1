@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PussyCats.Library.Domain;
-using PussyCats.Library.DTOs;
+using PussyCats.Library.Helpers;
 using PussyCats.Library.Services.Documents;
 using PussyCats.Library.Services.Users;
 
@@ -10,73 +10,79 @@ namespace PussyCats.Api.Controllers;
 [Route("api/documents")]
 public class DocumentsController : ControllerBase
 {
-    private readonly IDocumentService documents;
-    private readonly IUserService users;
+    private readonly IDocumentService documentService;
+    private readonly IUserService userService;
 
-    public DocumentsController(IDocumentService documents, IUserService users)
+    public DocumentsController(IDocumentService documentService, IUserService userService)
     {
-        this.documents = documents;
-        this.users = users;
+        this.documentService = documentService;
+        this.userService = userService;
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int? userId, CancellationToken cancellationToken)
+    [HttpGet("user/{userId:int}")]
+    public async Task<IActionResult> GetByUserId(int userId, CancellationToken cancellationToken)
     {
-        if (userId.HasValue)
-        {
-            return Ok(await documents.GetDocumentsByUserIdAsync(userId.Value, cancellationToken));
-        }
-        return Ok(await documents.GetAllAsync(cancellationToken));
+        var documents = await documentService.GetDocumentsByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
+        return Ok(documents);
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
+    [HttpPost("upload")]
+    public async Task<IActionResult> Upload(
+        [FromForm] int userId,
+        [FromForm] string documentName,
+        IFormFile file,
+        CancellationToken cancellationToken)
     {
-        var document = await documents.GetByIdAsync(id, cancellationToken);
-        return document is null ? NotFound() : Ok(document);
-    }
+        if (file is null || file.Length == 0)
+            return BadRequest("No file provided.");
 
-    [HttpPost]
-    public async Task<IActionResult> Add([FromBody] DocumentAddRequest body, CancellationToken cancellationToken)
-    {
-        const int mockUserId = 1;
-        int resolvedUserId = body.UserId > 0 ? body.UserId : mockUserId;
-
-        var user = await users.GetByIdAsync(resolvedUserId, cancellationToken);
+        var user = await userService.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
         if (user is null)
-            return NotFound($"User {resolvedUserId} not found.");
+            return NotFound($"User {userId} not found.");
 
         var document = new Document
         {
             User = user,
-            DocumentName = body.DocumentName,
-            FilePath = body.FilePath,
+            DocumentName = documentName,
         };
-        document.DocumentId = 0;
-        var saved = await documents.AddAsync(document, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id = saved.DocumentId }, saved);
+
+        await using var stream = file.OpenReadStream();
+        try
+        {
+            var saved = await documentService.UploadDocumentAsync(document, stream, file.FileName, cancellationToken).ConfigureAwait(false);
+            return CreatedAtAction(nameof(GetByUserId), new { userId = saved.User.UserId }, saved);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] DocumentUpdateRequest body, CancellationToken cancellationToken)
+    [HttpDelete("{documentId:int}")]
+    public async Task<IActionResult> Delete(int documentId, CancellationToken cancellationToken)
     {
-        var existing = await documents.GetByIdAsync(id, cancellationToken);
-        if (existing is null)
-            return NotFound();
-
-        existing.DocumentName = body.DocumentName;
-        existing.FilePath = body.FilePath;
-
-        await documents.UpdateAsync(existing, cancellationToken);
-        return NoContent();
+        try
+        {
+            await documentService.DeleteDocumentAsync(documentId, cancellationToken).ConfigureAwait(false);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Remove(int id, CancellationToken cancellationToken)
+    [HttpGet("{documentId:int}/path")]
+    public async Task<IActionResult> GetPath(int documentId, CancellationToken cancellationToken)
     {
-        if (await documents.GetByIdAsync(id, cancellationToken) is null)
-            return NotFound();
-        await documents.RemoveAsync(id, cancellationToken);
-        return NoContent();
+        try
+        {
+            var path = await documentService.GetDocumentPathAsync(documentId, cancellationToken).ConfigureAwait(false);
+            return Ok(path);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 }

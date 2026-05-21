@@ -19,6 +19,6 @@ public sealed class StubLocalFileStorageService : ILocalFileStorageService
     public Task<Stream> OpenReadAsync(string relativePath, CancellationToken cancellationToken = default)
         => throw new NotSupportedException("File reads route through FilesController (/api/files), not the API's DocumentService.");
 
-    public string GetFilePath(string relativePath)
+    public string GetUrl(string relativePath)
         => throw new NotSupportedException("Path resolution routes through FilesController (/api/files), not the API's DocumentService.");
 }

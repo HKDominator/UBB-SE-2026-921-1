@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using PussyCats.Api.Configuration;
+using PussyCats.Api.Services;
 using PussyCats.Library.Persistence;
 using PussyCats.Library.Repositories.Chats;
 using PussyCats.Library.Repositories.Companies;
@@ -80,7 +81,7 @@ builder.Services.AddScoped<IMatchService, MatchService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddScoped<IPersonalityTestService, PersonalityTestService>();
-builder.Services.AddSingleton<ILocalFileStorageService, StubLocalFileStorageService>();
+builder.Services.AddSingleton<ILocalFileStorageService,LocalFileStorageService>();
 builder.Services.AddScoped<ISkillTestService, SkillTestService>();
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();

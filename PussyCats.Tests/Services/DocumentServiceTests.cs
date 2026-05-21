@@ -153,9 +153,9 @@ public class DocumentServiceTests : IDisposable
         const string absolutePath = @"C:\files\uploads\x.pdf";
 
         documentRepository.Seed(new Document { DocumentId = documentId, User = new User { UserId = userId }, FilePath = relativePath });
-        fileStorage.GetFilePath(relativePath).Returns(absolutePath);
+        fileStorage.GetUrl(relativePath).Returns(absolutePath);
 
-        var path = await service.GetDocumentAbsolutePathAsync(documentId);
+        var path = await service.GetDocumentPathAsync(documentId);
 
         path.Should().Be(absolutePath);
     }
@@ -164,7 +164,7 @@ public class DocumentServiceTests : IDisposable
     public async Task GetDocumentAbsolutePathAsync_DocumentIsMissing_ThrowsNotFoundException()
     {
         const int nonExistentDocumentId = 9999;
-        Func<Task> act = () => service.GetDocumentAbsolutePathAsync(nonExistentDocumentId);
+        Func<Task> act = () => service.GetDocumentPathAsync(nonExistentDocumentId);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("Document not found.");

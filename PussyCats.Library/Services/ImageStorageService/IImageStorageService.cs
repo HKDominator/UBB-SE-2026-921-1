@@ -1,4 +1,4 @@
-namespace PussyCats_App.Services.ImageStorageService;
+namespace PussyCats.Library.Services.ImageStorageService;
 
 public interface IImageStorageService
 {

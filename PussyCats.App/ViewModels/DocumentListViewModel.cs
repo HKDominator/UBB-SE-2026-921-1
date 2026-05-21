@@ -49,7 +49,7 @@ public class DocumentListViewModel : DispatchableObservableObject
     {
         try
         {
-            var fullPath = await documentService.GetDocumentAbsolutePathAsync(documentId, cancellationToken);
+            var fullPath = await documentService.GetDocumentPathAsync(documentId, cancellationToken);
             StatusMessage = string.Empty;
             return fullPath;
         }

@@ -10,6 +10,9 @@ using PussyCats.Tests.Fakes;
 using PussyCats_App.Services.CompletenessService;
 using PussyCats_App.Services.ImageStorageService;
 using PussyCats_App.Services.UserProfileService;
+using PussyCats.Library.Services.CompletenessService;
+using PussyCats.Library.Services.ImageStorageService;
+using PussyCats.Library.Services.UserProfileService;
 
 namespace PussyCats.Tests.Integration;
 
@@ -105,7 +108,7 @@ public class UserProfileViewModelTests
         await userRepository.AddAsync(user);
         await viewModel.LoadUserAsync();
 
-        // Mocking the specific level calculation logic usually handled by the service/recommendationRepository
+        // Mocking the specific level calculation logic usually handled by the serviceProxy/recommendationRepository
         var eventRaised = false;
         viewModel.LevelUpdated += () => eventRaised = true;
 

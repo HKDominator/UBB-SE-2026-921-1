@@ -1,7 +1,9 @@
-using PussyCats.App.RepositoryProxies;
+using PussyCats.Library.Services.FileStorage;
+using PussyCats.Library.Services.ImageStorageService;
 
 namespace PussyCats_App.Services.ImageStorageService;
 
+//this needs to stay here
 public class ImageStorageService : IImageStorageService
 {
     private const int BytesPerKilobyte = 1024;
@@ -9,24 +11,24 @@ public class ImageStorageService : IImageStorageService
     private const int MaxFileSizeInMb = 20;
     private const int MaxFileSize = MaxFileSizeInMb * BytesPerMegabyte;
 
-    private readonly IFilesProxy filesProxy;
+    private readonly ILocalFileStorageService fileStorageService;
     private readonly HashSet<string> allowedExtensions = new() { ".jpg", ".jpeg", ".png" };
 
-    public ImageStorageService(IFilesProxy filesProxy)
+    public ImageStorageService(ILocalFileStorageService fileStorageService)
     {
-        this.filesProxy = filesProxy;
+        this.fileStorageService = fileStorageService;
     }
 
     public Task<string> SaveImageAsync(Stream fileStream, string fileName, CancellationToken cancellationToken = default)
     {
         var extension = GetImageExtension(fileName);
         CheckFileSize(fileStream);
-        return filesProxy.UploadAsync(fileStream, $"upload{extension}", cancellationToken);
+        return fileStorageService.SaveFileAsync(fileStream, $"upload{extension}", cancellationToken);
     }
 
     public Task DeleteImageAsync(string relativePath, CancellationToken cancellationToken = default)
     {
-        return filesProxy.DeleteAsync(relativePath, cancellationToken);
+        return fileStorageService.DeleteFileAsync(relativePath, cancellationToken);
     }
 
     private string GetImageExtension(string fileName)

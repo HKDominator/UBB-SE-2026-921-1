@@ -2,18 +2,19 @@ using FluentAssertions;
 using NSubstitute;
 using PussyCats.App.RepositoryProxies;
 using PussyCats.Library.Services.FileStorage;
-using PussyCats_App.Services.LocalFileStorageService;
+using PussyCats_App.ServiceProxies;
+using PussyCats.App.ServiceProxies;
 
 namespace PussyCats.Tests.Services;
 
-public class LocalFileStorageServiceTests
+public class LocalFileStorageServiceProxyTests
 {
     private readonly IFilesProxy filesProxy = Substitute.For<IFilesProxy>();
-    private readonly LocalFileStorageService service;
+    private readonly LocalFileStorageServiceProxy serviceProxy;
 
-    public LocalFileStorageServiceTests()
+    public LocalFileStorageServiceProxyTests()
     {
-        service = new LocalFileStorageService(filesProxy);
+        serviceProxy = new LocalFileStorageServiceProxy(filesProxy);
     }
 
     [Fact]
@@ -23,7 +24,7 @@ public class LocalFileStorageServiceTests
             .Returns("uploads/x.pdf");
         using var stream = new MemoryStream(new byte[] { 1, 2, 3 });
 
-        var result = await service.SaveFileAsync(stream, "x.pdf");
+        var result = await serviceProxy.SaveFileAsync(stream, "x.pdf");
 
         result.Should().Be("uploads/x.pdf");
         await filesProxy.Received(1).UploadAsync(stream, "x.pdf", Arg.Any<CancellationToken>());
@@ -32,7 +33,7 @@ public class LocalFileStorageServiceTests
     [Fact]
     public async Task DeleteFileAsync_FilePathProvided_DelegatesToFilesProxy()
     {
-        await service.DeleteFileAsync("uploads/x.pdf");
+        await serviceProxy.DeleteFileAsync("uploads/x.pdf");
 
         await filesProxy.Received(1).DeleteAsync("uploads/x.pdf", Arg.Any<CancellationToken>());
     }
@@ -43,7 +44,7 @@ public class LocalFileStorageServiceTests
         using var stream = new MemoryStream(new byte[] { 4, 5, 6 });
         filesProxy.DownloadAsync("uploads/x.pdf", Arg.Any<CancellationToken>()).Returns(stream);
 
-        var result = await service.OpenReadAsync("uploads/x.pdf");
+        var result = await serviceProxy.OpenReadAsync("uploads/x.pdf");
 
         result.Should().BeSameAs(stream);
         await filesProxy.Received(1).DownloadAsync("uploads/x.pdf", Arg.Any<CancellationToken>());
@@ -54,13 +55,13 @@ public class LocalFileStorageServiceTests
     {
         filesProxy.GetUrl("uploads/x.pdf").Returns("https://api/api/files/x.pdf");
 
-        service.GetFilePath("uploads/x.pdf").Should().Be("https://api/api/files/x.pdf");
+        serviceProxy.GetFilePath("uploads/x.pdf").Should().Be("https://api/api/files/x.pdf");
     }
 
     [Fact]
     public void GetFilePath_PathIsNull_ThrowsArgumentNullException()
     {
-        Action act = () => service.GetFilePath(null!);
+        Action act = () => serviceProxy.GetFilePath(null!);
 
         act.Should().Throw<ArgumentNullException>();
     }

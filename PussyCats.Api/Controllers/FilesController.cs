@@ -42,10 +42,10 @@ public class FilesController : ControllerBase
         return Ok(new { path = fileName });
     }
 
-    [HttpGet("{id}")]
-    public IActionResult GetFile(string id)
+    [HttpGet("{relativeFilePath}")]
+    public IActionResult GetFile(string relativeFilePath)
     {
-        var fileName = Path.GetFileName(id);
+        var fileName = Path.GetFileName(relativeFilePath);
         var fullPath = Path.Combine(uploadsPath, fileName);
         if (!System.IO.File.Exists(fullPath))
         {
@@ -55,7 +55,7 @@ public class FilesController : ControllerBase
         if (!System.IO.File.Exists(fullPath))
             return NotFound();
 
-        var ext = Path.GetExtension(id).ToLowerInvariant();
+        var ext = Path.GetExtension(relativeFilePath).ToLowerInvariant();
         var contentType = ext switch
         {
             ".png" => "image/png",

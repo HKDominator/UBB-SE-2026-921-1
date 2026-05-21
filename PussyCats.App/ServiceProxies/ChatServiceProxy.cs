@@ -2,16 +2,19 @@
 using PussyCats.Library.Domain;
 using PussyCats.Library.Domain.Enums;
 using PussyCats.Library.Services.ChatService;
+using PussyCats.Library.Services.FileStorage;
 
 namespace PussyCats.App.ServiceProxies;
 
 public class ChatServiceProxy : IChatService
 {
     private readonly HttpClient http;
+    private readonly ILocalFileStorageService fileStorageService;
 
-    public ChatServiceProxy(HttpClient http)
+    public ChatServiceProxy(HttpClient http, ILocalFileStorageService fileStorageService)
     {
         this.http = http;
+        this.fileStorageService = fileStorageService;
     }
 
     public async Task<Chat?> FindOrCreateUserCompanyChatAsync(int userId, Company company, Job? job = null, CancellationToken cancellationToken = default)
@@ -60,10 +63,18 @@ public class ChatServiceProxy : IChatService
         return await http.GetFromJsonAsync<IReadOnlyList<User>>($"api/chat/search/users?term={Uri.EscapeDataString(userNameSearchTerm)}", JsonOptions.Default, cancellationToken).ConfigureAwait(false)
                ?? [];
     }
-
+    //todo handle attachments, send stream
     public async Task SendMessageAsync(int chatId, string content, int senderId, MessageType typeOfMessage, CancellationToken cancellationToken = default)
     {
-        var response = await http.PostAsJsonAsync($"api/chat/{chatId}/messages?senderId={senderId}&type={typeOfMessage}", content, JsonOptions.Default, cancellationToken).ConfigureAwait(false);
+        if (typeOfMessage != MessageType.Text)
+        {
+            await using var stream = File.OpenRead(content);
+            content = await fileStorageService.SaveFileAsync(stream, Path.GetFileName(content), cancellationToken).ConfigureAwait(false);
+        }
+
+        var response = await http.PostAsJsonAsync(
+            $"api/chat/{chatId}/messages?senderId={senderId}&type={typeOfMessage}",
+            content, JsonOptions.Default, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 

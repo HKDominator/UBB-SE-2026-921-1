@@ -63,13 +63,11 @@ public class UploadDocumentViewModel : DispatchableObservableObject
     public async Task UploadDocumentAsync(CancellationToken cancellationToken = default)
     {
         if (!ValidateDocumentInput())
-        {
             return;
-        }
 
         var userId = ViewModelSupport.ResolveUserId(session);
         var user = await userService.GetByIdAsync(userId, cancellationToken)
-            ?? new User { UserId = userId };
+                   ?? new User { UserId = userId };
 
         var document = new Document
         {
@@ -77,7 +75,8 @@ public class UploadDocumentViewModel : DispatchableObservableObject
             DocumentName = DocumentName.Trim(),
         };
 
-        await documentService.UploadDocumentAsync(document, SelectedFilePath, cancellationToken);
+        await using var stream = File.OpenRead(SelectedFilePath);
+        await documentService.UploadDocumentAsync(document, stream, Path.GetFileName(SelectedFilePath), cancellationToken);
     }
 
     public string GetDocumentName() => DocumentName;

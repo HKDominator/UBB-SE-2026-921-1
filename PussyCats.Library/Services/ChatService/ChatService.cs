@@ -139,7 +139,7 @@ public class ChatService : IChatService
     }
 
     public async Task SendMessageAsync(int chatId, string content, int senderId, MessageType typeOfMessage, CancellationToken cancellationToken = default)
-    {
+    {//todo this should receive a stream instead of a file path for attachments, and the service should handle storing it and passing the storage path to the repository
         if (string.IsNullOrWhiteSpace(content))
         {
             throw new ArgumentException("Message content cannot be empty.", nameof(content));

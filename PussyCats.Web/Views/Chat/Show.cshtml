@@ -1,0 +1,56 @@
+@model IReadOnlyList<PussyCats.Library.Domain.Message>
+@{
+    ViewData["Title"] = "Chat";
+    int chatId = ViewBag.ChatId;
+    int currentUserId = ViewBag.CurrentUserId;
+}
+
+<div class="container mt-4" style="max-width: 760px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">&larr; Back</a>
+        <div class="d-flex gap-2">
+            <form asp-action="Block" asp-route-id="@chatId" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-warning btn-sm">Block</button>
+            </form>
+            <form asp-action="Delete" asp-route-id="@chatId" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-danger btn-sm"
+                        onclick="return confirm('Delete this conversation?')">Delete</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="border rounded p-3 mb-3 bg-white" style="min-height: 400px; max-height: 500px; overflow-y: auto;">
+        @if (!Model.Any())
+        {
+            <p class="text-muted text-center mt-5">No messages yet. Say hello!</p>
+        }
+        else
+        {
+            @foreach (var msg in Model)
+            {
+                var isMine = msg.Sender.SenderId == currentUserId;
+                <div class="d-flex @(isMine ? "justify-content-end" : "justify-content-start") mb-2">
+                    <div class="px-3 py-2 rounded-3 @(isMine ? "bg-primary text-white" : "bg-light border")"
+                         style="max-width: 70%;">
+                        <div>@msg.Content</div>
+                        <small class="@(isMine ? "text-white-50" : "text-muted") d-block mt-1" style="font-size:0.75rem;">
+                            @msg.Timestamp.ToLocalTime().ToString("HH:mm")
+                            @if (isMine && msg.IsRead)
+                            {
+                                <span>&#10003;&#10003;</span>
+                            }
+                        </small>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <form asp-action="Send" asp-route-id="@chatId" method="post" class="d-flex gap-2">
+        @Html.AntiForgeryToken()
+        <input type="text" name="content" class="form-control" placeholder="Type a message…" autocomplete="off" required />
+        <button type="submit" class="btn btn-primary">Send</button>
+    </form>
+</div>

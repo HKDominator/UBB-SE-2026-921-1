@@ -1,7 +1,7 @@
 using PussyCats.Library.Domain;
 using PussyCats.Library.Repositories.Skills;
 
-namespace PussyCats_App.Services.JobSkillService;
+namespace PussyCats.Library.Services.JobSkills;
 
 public class JobSkillService : IJobSkillService
 {

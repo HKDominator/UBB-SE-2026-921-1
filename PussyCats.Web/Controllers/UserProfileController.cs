@@ -1,50 +1,89 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
-using PussyCats.Library.Services.UserProfileService;
 using PussyCats.Library.Services.CompletenessService;
+using PussyCats.Library.Services.ImageStorage;
+using PussyCats.Library.Services.UserProfileService;
+using PussyCats.Library.Services.Users;
 
-namespace PussyCats.Web.Controllers
+namespace PussyCats.Web.Controllers;
+
+public class UserProfileController : Controller
 {
-    //[Authorize] // Fulfills security constraints
-    public class UserProfileController : Controller
+    private readonly IUserProfileService userProfileService;
+    private readonly ICompletenessService completenessService;
+    private readonly IImageStorageService imageStorage;
+    private readonly IUserService userService;
+
+    private int CurrentUserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    public UserProfileController(
+        IUserProfileService userProfileService,
+        ICompletenessService completenessService,
+        IImageStorageService imageStorage,
+        IUserService userService)
     {
-        private readonly IUserProfileService userProfileService;
-        private readonly ICompletenessService completenessService;
+        this.userProfileService = userProfileService;
+        this.completenessService = completenessService;
+        this.imageStorage = imageStorage;
+        this.userService = userService;
+    }
 
-        public UserProfileController(IUserProfileService profileService, ICompletenessService completenessService)
+    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    {
+        var user = await userProfileService.GetProfileAsync(CurrentUserId, cancellationToken);
+        if (user is null)
+            return NotFound();
+
+        ViewBag.CompletenessPercentage = completenessService.CalculateCompleteness(user);
+        ViewBag.NextFieldPrompt = completenessService.GetNextEmptyFieldPrompt(user);
+        ViewBag.TotalXp = await userProfileService.RecalculateLevelAsync(user, cancellationToken);
+        return View(user);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleStatus(CancellationToken cancellationToken)
+    {
+        var user = await userProfileService.GetProfileAsync(CurrentUserId, cancellationToken);
+        if (user is null)
+            return NotFound();
+
+        await userProfileService.UpdateAccountStatusAsync(CurrentUserId, !user.ActiveAccount, cancellationToken);
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadAvatar(IFormFile avatar, CancellationToken cancellationToken)
+    {
+        if (avatar is null || avatar.Length == 0)
         {
-            userProfileService = profileService;
-            this.completenessService = completenessService;
-        }
-
-        // GET: /Profile
-        public async Task<IActionResult> Index()
-        {
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-            var user = await userProfileService.GetProfileAsync(userId);
-            if (user == null) return NotFound();
-
-            // Calculate support metadata exactly like your WinUI viewmodel logic
-            ViewBag.CompletenessPercentage = completenessService.CalculateCompleteness(user);
-            ViewBag.NextFieldPrompt = completenessService.GetNextEmptyFieldPrompt(user);
-            ViewBag.TotalXp = await userProfileService.RecalculateLevelAsync(user);
-
-            return View(user);
-        }
-
-        // POST: /Profile/ToggleStatus
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ToggleStatus()
-        {
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var user = await userProfileService.GetProfileAsync(userId);
-            if (user == null) return NotFound();
-
-            await userProfileService.UpdateAccountStatusAsync(userId, !user.ActiveAccount);
+            TempData["Error"] = "Please select an image file.";
             return RedirectToAction(nameof(Index));
         }
+
+        try
+        {
+            await using var stream = avatar.OpenReadStream();
+            imageStorage.CheckFileSize(stream);
+            stream.Position = 0;
+            var path = await imageStorage.SaveImageAsync(stream, avatar.FileName, cancellationToken);
+            await userService.SetProfilePicturePathAsync(CurrentUserId, path, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveAvatar(CancellationToken cancellationToken)
+    {
+        var user = await userProfileService.GetProfileAsync(CurrentUserId, cancellationToken);
+        if (user is not null && !string.IsNullOrWhiteSpace(user.ProfilePicturePath))
+            await imageStorage.DeleteImageAsync(user.ProfilePicturePath, cancellationToken);
+
+        await userService.SetProfilePicturePathAsync(CurrentUserId, string.Empty, cancellationToken);
+        return RedirectToAction(nameof(Index));
     }
 }

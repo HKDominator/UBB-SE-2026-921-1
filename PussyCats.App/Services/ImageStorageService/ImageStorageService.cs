@@ -1,8 +1,9 @@
 using PussyCats.App.RepositoryProxies;
+using PussyCats.Library.Services.ImageStorage;
 
 namespace PussyCats_App.Services.ImageStorageService;
 
-public class ImageStorageService : IImageStorageService
+public class ImageStorageService : PussyCats.Library.Services.ImageStorage.IImageStorageService
 {
     private const int BytesPerKilobyte = 1024;
     private const int BytesPerMegabyte = 1024 * BytesPerKilobyte;

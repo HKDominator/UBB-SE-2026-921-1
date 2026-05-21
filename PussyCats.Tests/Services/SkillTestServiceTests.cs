@@ -3,7 +3,7 @@ using PussyCats.Library.Domain;
 using PussyCats.Library.Domain.Enums;
 using PussyCats.Tests.Fakes;
 using PussyCats.Tests.Helpers;
-using PussyCats_App.Services.SkillTestService;
+using PussyCats.Library.Services.SkillTests;
 
 namespace PussyCats.Tests.Services;
 

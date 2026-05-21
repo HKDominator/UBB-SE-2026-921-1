@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using PussyCats.Library.Services.CompanyService;
 using PussyCats.Library.Services.CompletenessService;
 using PussyCats.Library.Services.Documents;
@@ -22,12 +23,52 @@ builder.Services.AddSingleton(apiConfig);
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<ICompletenessService, CompletenessService>();
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
 builder.Services.AddControllersWithViews()
-    .AddJsonOptions(opt =>
-        opt.JsonSerializerOptions.Converters.Add(
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(
             new System.Text.Json.Serialization.JsonStringEnumConverter()));
+
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+    });
+builder.Services.AddAuthorization();
+
+RegisterServiceProxy<ICompanyService, CompanyServiceProxy>(builder.Services, apiConfig);
+RegisterServiceProxy<IDocumentService, DocumentServiceProxy>(builder.Services, apiConfig);
+RegisterServiceProxy<IJobService, JobServiceProxy>(builder.Services, apiConfig);
+RegisterServiceProxy<IPersonalityTestService, PersonalityTestServiceProxy>(builder.Services, apiConfig);
+RegisterServiceProxy<IRecommendationService, RecommendationServiceProxy>(builder.Services, apiConfig);
+RegisterServiceProxy<ISkillService, SkillServiceProxy>(builder.Services, apiConfig);
+RegisterServiceProxy<ISkillTestService, SkillTestServiceProxy>(builder.Services, apiConfig);
+RegisterServiceProxy<IUserProfileService, UserProfileServiceProxy>(builder.Services, apiConfig);
+RegisterServiceProxy<IUserService, UserServiceProxy>(builder.Services, apiConfig);
+
+var app = builder.Build();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapStaticAssets();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}")
+    .WithStaticAssets();
+
+app.Run();
 
 static void RegisterServiceProxy<TService, TProxy>(
     IServiceCollection services,
@@ -38,69 +79,3 @@ static void RegisterServiceProxy<TService, TProxy>(
     services.AddHttpClient<TService, TProxy>(client =>
         client.BaseAddress = new Uri(apiConfiguration.BaseUrl));
 }
-
-
-RegisterServiceProxy<ICompanyService, CompanyServiceProxy>(builder.Services, apiConfig);
-
-
-builder.Services.AddHttpClient<ISkillService, SkillServiceProxy>(client =>
-{
-    client.BaseAddress = new Uri(apiConfig.BaseUrl);
-});
-
-builder.Services.AddHttpClient<IUserService, UserServiceProxy>(client =>
-{
-    client.BaseAddress = new Uri(apiConfig.BaseUrl);
-});
-
-builder.Services.AddHttpClient<IJobService, JobServiceProxy>(client =>
-{
-    client.BaseAddress = new Uri(apiConfig.BaseUrl);
-});
-
-builder.Services.AddHttpClient<IRecommendationService, RecommendationServiceProxy>(client =>
-{
-    client.BaseAddress = new Uri(apiConfig.BaseUrl);
-});
-builder.Services.AddHttpClient<IPersonalityTestService, PersonalityTestServiceProxy>(client =>
-{ 
-    client.BaseAddress = new Uri(apiConfig.BaseUrl);
-});
-
-builder.Services.AddHttpClient<IDocumentService, DocumentServiceProxy>(client =>
-{  
-  client.BaseAddress = new Uri(apiConfig.BaseUrl);
-});
-builder.Services.AddHttpClient<ISkillTestService, SkillTestServiceProxy>(client =>
-{ 
-    client.BaseAddress = new Uri(apiConfig.BaseUrl);
-});
-builder.Services.AddHttpClient<IUserProfileService, UserProfileServiceProxy>(client =>
-{
-    client.BaseAddress = new Uri(apiConfig.BaseUrl);
-});
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
-
-app.UseHttpsRedirection();
-app.UseRouting();
-
-app.UseAuthorization();
-
-app.MapStaticAssets();
-
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
-
-
-app.Run();

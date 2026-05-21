@@ -7,9 +7,9 @@ using PussyCats.Library.Domain.Enums;
 using PussyCats.Library.Repositories.SkillTests;
 using PussyCats.Library.Repositories.Users;
 using PussyCats.Tests.Fakes;
-using PussyCats_App.Services.CompletenessService;
+using PussyCats.Library.Services.CompletenessService;
 using PussyCats_App.Services.ImageStorageService;
-using PussyCats_App.Services.UserProfileService;
+using PussyCats.Library.Services.UserProfileService;
 
 namespace PussyCats.Tests.Integration;
 

@@ -109,6 +109,12 @@ builder.Services.AddScoped<IPreferenceService, PreferenceService>();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<PussyCats.Library.Persistence.PussyCatsDbContext>();
+    db.Database.Migrate();
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

@@ -3,7 +3,8 @@ using PussyCats.App.Services;
 using PussyCats.Library.Domain;
 using PussyCats.Tests.Fakes;
 using PussyCats.Tests.Helpers;
-using PussyCats_App.Services.UserProfileService;
+using PussyCats.Library.Services.UserProfileService;
+using PussyCats.Library.Services;
 
 namespace PussyCats.Tests.Services;
 
@@ -128,7 +129,7 @@ public class UserProfileServiceTests
     [Fact]
     public void GenerateParsedCvText_UserIsNull_ReturnsEmptyString()
     {
-        service.GenerateParsedCvText(null!).Should().BeEmpty();
+        PussyCats.Library.Services.Helpers.GenerateParsedCvText(null!).Should().BeEmpty();
     }
 
     [Fact]
@@ -142,7 +143,7 @@ public class UserProfileServiceTests
             new() { Skill = new Skill { SkillId = SkillIdTwo, Name = SecondarySkillName } },
         };
 
-        var text = service.GenerateParsedCvText(user);
+        var text = PussyCats.Library.Services.Helpers.GenerateParsedCvText(user);
 
         text.Should().Contain($"{FirstName} {LastName}");
         text.Should().Contain(UniversityName);

@@ -20,7 +20,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     private const int MaxLinkedInLength = 256;
     private const int MaxMotivationLength = 2000;
     private const int MaxProfilePicturePathLength = 512;
-    private const int MaxPreferredEmploymentTypeLength = 40;
+    // PreferenceService stores up to 3 comma-joined JobRole names here. Worst case:
+    // "CybersecuritySpecialist,CybersecuritySpecialist,CybersecuritySpecialist" = 74 chars.
+    // 200 leaves headroom if more roles are added to the enum later.
+    private const int MaxPreferredEmploymentTypeLength = 200;
     private const int MaxWorkModePreferenceLength = 40;
     private const int MaxLocationPreferenceLength = 100;
     public void Configure(EntityTypeBuilder<User> builder)

@@ -37,7 +37,7 @@ using PussyCats_App.Services.DeveloperService;
 using PussyCats_App.Services.ImageStorageService;
 using PussyCats.Library.Services.JobSkills;
 using PussyCats_App.Services.LocalFileStorageService;
-using PussyCats_App.Services.PreferenceService;
+using PussyCats.Library.Services.Preferences;
 using PussyCats.Library.Services.RecommendationAlgorithm;
 using PussyCats_App.Services.SkillGapService;
 

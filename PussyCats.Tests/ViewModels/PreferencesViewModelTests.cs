@@ -5,7 +5,7 @@ using PussyCats.App.ViewModels;
 using PussyCats.Library.Domain.Enums;
 using PussyCats.Library.DTOs;
 using PussyCats.Tests.Fakes;
-using PussyCats_App.Services.PreferenceService;
+using PussyCats.Library.Services.Preferences;
 
 namespace PussyCats.Tests.ViewModels;
 

@@ -1,9 +1,9 @@
-using PussyCats.App.Configuration;
+using PussyCats.Library.Configuration;
 using PussyCats.Library.Domain.Enums;
 using PussyCats.Library.DTOs;
 using PussyCats.Library.Repositories.Users;
 
-namespace PussyCats_App.Services.PreferenceService;
+namespace PussyCats.Library.Services.Preferences;
 
 public class PreferenceService : IPreferenceService
 {

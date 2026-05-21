@@ -1,7 +1,7 @@
 using PussyCats.Library.Domain.Enums;
 using PussyCats.Library.DTOs;
 
-namespace PussyCats_App.Services.PreferenceService;
+namespace PussyCats.Library.Services.Preferences;
 
 /// <summary>Reads and writes the three user preference fields: employment type, work mode, location.</summary>
 public interface IPreferenceService

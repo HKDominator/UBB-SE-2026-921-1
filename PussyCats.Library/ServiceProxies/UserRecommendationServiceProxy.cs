@@ -1,9 +1,10 @@
 ﻿using System.Text.Json;
+using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using PussyCats.Library.DTOs;
 using PussyCats.Library.Services.UserRecommendationService;
 
-namespace PussyCats.Web.ServiceProxies
+namespace PussyCats.Library.ServiceProxies
 {
     public class UserRecommendationServiceProxy : IUserRecommendationService
     {

@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
 using PussyCats.Library.Services.CooldownService;
 
-namespace PussyCats.Web.ServiceProxies;
+namespace PussyCats.Library.ServiceProxies;
 
 public class CooldownServiceProxy : ICooldownService
 {

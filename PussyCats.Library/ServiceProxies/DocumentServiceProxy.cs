@@ -6,7 +6,7 @@ using PussyCats.Library.Domain;
 using PussyCats.Library.DTOs;
 using PussyCats.Library.Services.Documents;
 
-namespace PussyCats.Web.ServiceProxies;
+namespace PussyCats.Library.ServiceProxies;
 
 public class DocumentServiceProxy : IDocumentService
 {

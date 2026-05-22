@@ -5,7 +5,7 @@ using PussyCats.Library.Domain;
 using PussyCats.Library.Domain.Enums;
 using PussyCats.Library.Services.Developers;
 
-namespace PussyCats.Web.ServiceProxies;
+namespace PussyCats.Library.ServiceProxies;
 
 public class DeveloperServiceProxy : IDeveloperService
 {

@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using PussyCats.Library.DTOs;
 using PussyCats.Library.Services.CompanyStatusService;
 
-namespace PussyCats.Web.ServiceProxies;
+namespace PussyCats.Library.ServiceProxies;
 
 public class CompanyStatusServiceProxy : ICompanyStatusService
 {

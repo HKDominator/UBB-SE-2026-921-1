@@ -5,7 +5,7 @@ using PussyCats.Library.Domain.Enums;
 using PussyCats.Library.DTOs;
 using PussyCats.Library.Services.CompatibilityService;
 
-namespace PussyCats.Web.ServiceProxies;
+namespace PussyCats.Library.ServiceProxies;
 
 public class CompatibilityServiceProxy : ICompatibilityService
 {

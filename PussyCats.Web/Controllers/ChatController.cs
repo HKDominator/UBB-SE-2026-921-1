@@ -34,7 +34,7 @@ public class ChatController : Controller
         await chat.MarkMessagesAsReadAsync(id, CurrentUserId, cancellationToken);
         ViewBag.ChatId = id;
         ViewBag.CurrentUserId = CurrentUserId;
-        ViewBag.ApiBase = fileStorage.GetFilePath(string.Empty).TrimEnd('/');
+        ViewBag.ApiBase = fileStorage.GetUrl(string.Empty).TrimEnd('/');
         return View(messages);
     }
 

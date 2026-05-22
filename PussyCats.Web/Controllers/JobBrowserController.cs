@@ -75,6 +75,8 @@ public class JobBrowserController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    public IActionResult ResetFilters() => RedirectToAction(nameof(Index));
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ApplyFilters(IFormCollection form)

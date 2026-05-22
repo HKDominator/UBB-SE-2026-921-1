@@ -2,24 +2,23 @@
 @inject PussyCats.Library.Services.SkillTests.ISkillTestService SkillTestService
 
 @{
-    // Server-side evaluation equivalent to LoadCardAsync in WinUI
     bool isRetakeEnabled = Model.SkillTestId > 0 && await SkillTestService.CanRetakeTestAsync(Model.SkillTestId);
-
-    // Fallback tier formatting
     var badge = PussyCats.Library.Services.SimpleModelOperations.AssignTier(Model.Score);
     string dateFormatted = PussyCats.Library.Services.SkillTests.ISkillTestService.AchievedDateFormatted(Model);
+    string tierLabel = badge?.Tier.ToString() ?? string.Empty;
+    string tierColor = tierLabel switch
+    {
+        "Gold" => "#FFD700",
+        "Silver" => "#C0C0C0",
+        "Bronze" => "#CD7F32",
+        _ => "#6c757d",
+    };
 }
 
 <article class="skill-test-card">
     <div class="skill-test-card__media">
-        @if (badge != null && !string.IsNullOrEmpty(badge.IconPath))
-        {
-            <img src="~/@badge.IconPath.Replace("ms-appx:///", "")" width="54" height="54" alt="Badge" />
-        }
-        else
-        {
-            <span class="skill-test-card__fallback">@Model.Score</span>
-        }
+        <span class="skill-test-card__fallback fw-bold"
+              style="color: @tierColor; font-size: 1.1rem;">@tierLabel</span>
     </div>
     <div class="skill-test-card__content">
         <div class="skill-test-card__meta">@dateFormatted</div>

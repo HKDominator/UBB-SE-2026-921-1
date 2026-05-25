@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using PussyCats.App.Configuration;
 using PussyCats.App.RepositoryProxies;
-using PussyCats.App.ServiceProxies;
+using PussyCats.Library.ServiceProxies;
 using PussyCats.Library.Repositories.Chats;
 using PussyCats.Library.Repositories.Companies;
 using PussyCats.Library.Repositories.Documents;
@@ -33,7 +33,7 @@ using PussyCats.Library.Services.CompatibilityService;
 using PussyCats.Library.Services.CompletenessService;
 using PussyCats.Library.Services.CooldownService;
 using PussyCats.Library.Services.CvParsing;
-using PussyCats_App.Services.DeveloperService;
+using PussyCats.Library.Services.Developers;
 using PussyCats.Library.Services.ImageStorage;
 using PussyCats.Library.Services.JobSkills;
 using PussyCats.Library.Services.Preferences;
@@ -117,7 +117,7 @@ public partial class App : Application
             client.BaseAddress = new Uri(apiConfiguration.BaseUrl));
 
         RegisterServiceProxy<IChatService, ChatServiceProxy>(services, apiConfiguration);
-        services.AddSingleton<IDeveloperService, DeveloperService>();
+        //services.AddSingleton<IDeveloperService, DeveloperService>();
 
 
         RegisterServiceProxy<ICompanyService,CompanyServiceProxy>(services, apiConfiguration);
@@ -126,33 +126,48 @@ public partial class App : Application
         RegisterServiceProxy<IUserProfileService, UserProfileServiceProxy>(services, apiConfiguration);
         RegisterServiceProxy<ISkillService, SkillServiceProxy>(services, apiConfiguration);
         RegisterServiceProxy<IUserService, UserServiceProxy>(services, apiConfiguration);
+        RegisterServiceProxy<ICompanyRecommendationService, CompanyRecommendationServiceProxy>(services, apiConfiguration);
+        RegisterServiceProxy<ICompatibilityService, CompatibilityServiceProxy>(services, apiConfiguration);
+        RegisterServiceProxy<ICompanyStatusService, CompanyStatusServiceProxy>(services, apiConfiguration);
+        RegisterServiceProxy<IDocumentService, DocumentServiceProxy>(services, apiConfiguration);
+        RegisterServiceProxy<IImageStorageService, ImageStorageServiceProxy>(services, apiConfiguration);
+        RegisterServiceProxy<IJobService, JobServiceProxy>(services, apiConfiguration);
+        RegisterServiceProxy<IJobSkillService, JobSkillServiceProxy>(services, apiConfiguration);
+        RegisterServiceProxy<IMatchService, MatchServiceProxy>(services, apiConfiguration);
+        RegisterServiceProxy<IPreferenceService, PreferenceServiceProxy>(services, apiConfiguration);
+        RegisterServiceProxy<IUserRecommendationService, UserRecommendationServiceProxy>(services, apiConfiguration);
+        RegisterServiceProxy<PussyCats.Library.Services.UserSkillService.IUserSkillService, UserSkillServiceProxy >(services, apiConfiguration);
+        RegisterServiceProxy<IUserSkillService, UserSkillServiceProxy>(services, apiConfiguration);
+        RegisterServiceProxy<IUserStatusService, UserStatusServiceProxy>(services, apiConfiguration);
+        RegisterServiceProxy<IDeveloperService, DeveloperServiceProxy>(services, apiConfiguration);
 
-        services.AddTransient<PussyCats.Library.Services.UserSkillService.IUserSkillService, PussyCats.Library.Services.UserSkillService.UserSkillService>();
-        services.AddTransient<ICompanyRecommendationService, CompanyRecommendationService>();
-        services.AddTransient<ICompanyStatusService, CompanyStatusService>();
-        services.AddTransient<ICompatibilityService, CompatibilityService>();
+
+        //services.AddTransient<PussyCats.Library.Services.UserSkillService.IUserSkillService, PussyCats.Library.Services.UserSkillService.UserSkillService>();
+        //services.AddTransient<ICompanyRecommendationService, CompanyRecommendationService>();
+        // services.AddTransient<ICompanyStatusService, CompanyStatusService>();
+        //services.AddTransient<ICompatibilityService, CompatibilityService>();
         services.AddTransient<ICompletenessService, CompletenessService>();
         services.AddTransient<ICooldownService>(provider => new CooldownService(
             provider.GetRequiredService<IRecommendationRepository>(),
             TimeSpan.FromHours(24)));
         services.AddTransient<ICvParsingService, CvParsingService>();
-        services.AddTransient<IDocumentService, DocumentService>();
+        //services.AddTransient<IDocumentService, DocumentService>();
         services.AddTransient<ILocalDocumentFileService, DocumentService>();
-        services.AddTransient<IImageStorageService, PussyCats_App.Services.ImageStorageService.ImageStorageService>();
-        services.AddTransient<IJobService, JobService>();
-        services.AddTransient<IJobSkillService, JobSkillService>();
+       // services.AddTransient<IImageStorageService, PussyCats_App.Services.ImageStorageService.ImageStorageService>();
+       // services.AddTransient<IJobService, JobService>();
+       // services.AddTransient<IJobSkillService, JobSkillService>();
         RegisterServiceProxy<ILocalFileStorageService, FileStorageServiceProxy>(services, apiConfiguration);
-        services.AddTransient<IMatchService, MatchService>();
-        services.AddTransient<IPreferenceService, PreferenceService>();
+       // services.AddTransient<IMatchService, MatchService>();
+       // services.AddTransient<IPreferenceService, PreferenceService>();
         services.AddTransient<IRecommendationAlgorithm, RecommendationAlgorithm>();
-        services.AddTransient<PussyCats.Library.Services.UserSkillService.IUserSkillService, PussyCats.Library.Services.UserSkillService.UserSkillService>();
+       // services.AddTransient<PussyCats.Library.Services.UserSkillService.IUserSkillService, PussyCats.Library.Services.UserSkillService.UserSkillService>();
         services.AddTransient<ISkillGapService, SkillGapService>();
        // services.AddTransient<ISkillTestService, SkillTestService>();
        // services.AddTransient<IUserProfileService, UserProfileService>();
-        services.AddTransient<IUserRecommendationService, UserRecommendationService>();
+       // services.AddTransient<IUserRecommendationService, UserRecommendationService>();
         //services.AddTransient<IUserService, UserService>();
-        services.AddTransient<IUserSkillService, UserSkillService>();
-        services.AddTransient<IUserStatusService, UserStatusService>();
+        //services.AddTransient<IUserSkillService, UserSkillService>();
+       // services.AddTransient<IUserStatusService, UserStatusService>();
 
         // PdfExportService is view-scoped because it needs the page's WebView2 instance.
         RegisterViewModels(services);

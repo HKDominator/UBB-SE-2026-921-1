@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using PussyCats.Library.Domain;
 using PussyCats.Library.Services.Jobs;
 
-namespace PussyCats.Web.ServiceProxies;
+namespace PussyCats.Library.ServiceProxies;
 
 public class JobServiceProxy : IJobService
 {

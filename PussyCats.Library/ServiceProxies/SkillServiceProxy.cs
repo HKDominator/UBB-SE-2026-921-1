@@ -2,7 +2,7 @@
 using PussyCats.Library.Domain;
 using PussyCats.Library.Services.Skills;
 
-namespace PussyCats.App.ServiceProxies;
+namespace PussyCats.Library.ServiceProxies;
 
 public class SkillServiceProxy : ISkillService
 {

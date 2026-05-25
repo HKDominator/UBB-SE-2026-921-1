@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 using PussyCats.Library.DTOs;
 using PussyCats.Library.Services.CompanyRecommendationService;
 
-namespace PussyCats.Web.ServiceProxies;
+namespace PussyCats.Library.ServiceProxies;
 
 public class CompanyRecommendationServiceProxy : ICompanyRecommendationService
 {

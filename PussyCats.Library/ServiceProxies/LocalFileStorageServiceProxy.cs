@@ -2,7 +2,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using PussyCats.Library.Services.FileStorage;
 
-namespace PussyCats.Web.ServiceProxies;
+namespace PussyCats.Library.ServiceProxies;
 
 public class FileStorageServiceProxy : ILocalFileStorageService
 {

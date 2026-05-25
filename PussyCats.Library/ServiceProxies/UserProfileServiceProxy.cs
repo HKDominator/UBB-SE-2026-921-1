@@ -1,9 +1,11 @@
-﻿using PussyCats.Library.Domain;
-using PussyCats.Library.Services.UserProfileService;
+﻿using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using PussyCats.Library.Domain;
+using PussyCats.Library.Services.UserProfileService;
 
-namespace PussyCats.Web.ServiceProxies
+
+namespace PussyCats.Library.ServiceProxies
 {
     public class UserProfileServiceProxy : IUserProfileService
     {

@@ -4,7 +4,7 @@ using PussyCats.Library.Domain;
 using PussyCats.Library.Helpers;
 using PussyCats.Library.Services.CompanyService;
 
-namespace PussyCats.App.ServiceProxies;
+namespace PussyCats.Library.ServiceProxies;
 
 public class CompanyServiceProxy : ICompanyService
 {
@@ -29,7 +29,7 @@ public class CompanyServiceProxy : ICompanyService
             return null;
 
         response.EnsureSuccessStatusCode();
-        var company= await response.Content.ReadFromJsonAsync<Company>(JsonOptions.Default, cancellationToken).ConfigureAwait(false);
+        var company = await response.Content.ReadFromJsonAsync<Company>(JsonOptions.Default, cancellationToken).ConfigureAwait(false);
         return company;
     }
 
@@ -37,13 +37,13 @@ public class CompanyServiceProxy : ICompanyService
     {
         var response = await http.PostAsJsonAsync("api/companies", company, JsonOptions.Default, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<Company>(JsonOptions.Default,cancellationToken).ConfigureAwait(false)
+        return await response.Content.ReadFromJsonAsync<Company>(JsonOptions.Default, cancellationToken).ConfigureAwait(false)
                ?? throw new InvalidOperationException("No company returned after creation.");
     }
 
     public async Task UpdateAsync(Company company, CancellationToken cancellationToken = default)
     {
-        var response = await http.PutAsJsonAsync($"api/companies/{company.CompanyId}", company, JsonOptions.Default,cancellationToken).ConfigureAwait(false);
+        var response = await http.PutAsJsonAsync($"api/companies/{company.CompanyId}", company, JsonOptions.Default, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 

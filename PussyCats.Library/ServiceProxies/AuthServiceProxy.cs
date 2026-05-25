@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
 
-namespace PussyCats.Web.ServiceProxies;
+namespace PussyCats.Library.ServiceProxies;
 
 public class AuthServiceProxy
 {

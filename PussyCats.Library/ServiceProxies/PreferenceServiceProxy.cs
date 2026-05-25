@@ -5,7 +5,7 @@ using PussyCats.Library.Domain.Enums;
 using PussyCats.Library.DTOs;
 using PussyCats.Library.Services.Preferences;
 
-namespace PussyCats.Web.ServiceProxies;
+namespace PussyCats.Library.ServiceProxies;
 
 public class PreferenceServiceProxy : IPreferenceService
 {

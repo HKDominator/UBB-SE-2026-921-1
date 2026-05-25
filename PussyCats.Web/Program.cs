@@ -23,9 +23,10 @@ using PussyCats.Library.Services.UserRecommendationService;
 using PussyCats.Library.Services.Users;
 using PussyCats.Library.Services.UserSkillService;
 using PussyCats.Library.Services.UserStatusService;
+using PussyCats.Library.ServiceProxies;
 using PussyCats.Web.Configuration;
 using PussyCats.Web.Infrastructure;
-using PussyCats.Web.ServiceProxies;
+
 
 var builder = WebApplication.CreateBuilder(args);
 

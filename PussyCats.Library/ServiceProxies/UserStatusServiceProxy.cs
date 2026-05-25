@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 using PussyCats.Library.DTOs;
 using PussyCats.Library.Services.UserStatusService;
 
-namespace PussyCats.Web.ServiceProxies;
+namespace PussyCats.Library.ServiceProxies;
 
 public class UserStatusServiceProxy : IUserStatusService
 {

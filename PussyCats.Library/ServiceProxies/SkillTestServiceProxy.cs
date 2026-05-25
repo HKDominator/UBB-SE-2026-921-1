@@ -1,9 +1,11 @@
-﻿using PussyCats.Library.Domain;
-using PussyCats.Library.Services.SkillTests;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Net.Http.Json;
+using PussyCats.Library.Domain;
+using PussyCats.Library.Services.SkillTests;
 
-namespace PussyCats.Web.ServiceProxies
+
+namespace PussyCats.Library.ServiceProxies
 {
     public class SkillTestServiceProxy : ISkillTestService
     {

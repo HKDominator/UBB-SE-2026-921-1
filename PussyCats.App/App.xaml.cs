@@ -28,7 +28,7 @@ using PussyCats.Library.Services.UserProfileService;
 using PussyCats.Library.Services.Users;
 using PussyCats.Library.Services.CompanyRecommendationService;
 using PussyCats.Library.Services.CompanyStatusService;
-using PussyCats_App.Services.CompatibilityService;
+using PussyCats.Library.Services.CompatibilityService;
 
 using PussyCats.Library.Services.CompletenessService;
 using PussyCats.Library.Services.CooldownService;
@@ -36,7 +36,6 @@ using PussyCats.Library.Services.CvParsing;
 using PussyCats_App.Services.DeveloperService;
 using PussyCats.Library.Services.ImageStorage;
 using PussyCats.Library.Services.JobSkills;
-using PussyCats_App.Services.LocalFileStorageService;
 using PussyCats.Library.Services.Preferences;
 using PussyCats.Library.Services.RecommendationAlgorithm;
 using PussyCats.Library.Services.SkillGapService;
@@ -46,7 +45,7 @@ using PussyCats.Library.Services.UserProfileService;
 using PussyCats.Library.Services.UserRecommendationService;
 
 using PussyCats.Library.Services.UserSkillService;
-using PussyCats_App.Services.UserStatusService;
+using PussyCats.Library.Services.UserStatusService;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -117,7 +116,7 @@ public partial class App : Application
         services.AddHttpClient<IFilesProxy, FilesProxy>(client =>
             client.BaseAddress = new Uri(apiConfiguration.BaseUrl));
 
-        services.AddTransient<IChatService, ChatService>();
+        RegisterServiceProxy<IChatService, ChatServiceProxy>(services, apiConfiguration);
         services.AddSingleton<IDeveloperService, DeveloperService>();
 
 
@@ -142,7 +141,7 @@ public partial class App : Application
         services.AddTransient<IImageStorageService, PussyCats_App.Services.ImageStorageService.ImageStorageService>();
         services.AddTransient<IJobService, JobService>();
         services.AddTransient<IJobSkillService, JobSkillService>();
-        services.AddTransient<ILocalFileStorageService, LocalFileStorageService>();
+        RegisterServiceProxy<ILocalFileStorageService, FileStorageServiceProxy>(services, apiConfiguration);
         services.AddTransient<IMatchService, MatchService>();
         services.AddTransient<IPreferenceService, PreferenceService>();
         services.AddTransient<IRecommendationAlgorithm, RecommendationAlgorithm>();

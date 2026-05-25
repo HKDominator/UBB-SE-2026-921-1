@@ -2,6 +2,7 @@ using System.Text;
 using PussyCats.Library.Domain;
 using PussyCats.Library.Repositories.SkillTests;
 using PussyCats.Library.Repositories.Users;
+using PussyCats.Library.Services.CvParsing;
 
 namespace PussyCats.Library.Services.UserProfileService;
 
@@ -9,11 +10,13 @@ public class UserProfileService : IUserProfileService
 {
     private readonly IUserRepository userRepository;
     private readonly ISkillTestRepository skillTestRepository;
+    private readonly ICvParsingService cvParsingService;
 
-    public UserProfileService(IUserRepository userRepository, ISkillTestRepository skillTestRepository)
+    public UserProfileService(IUserRepository userRepository, ISkillTestRepository skillTestRepository, ICvParsingService cvParsingService)
     {
         this.userRepository = userRepository;
         this.skillTestRepository = skillTestRepository;
+        this.cvParsingService = cvParsingService;
     }
 
     public async Task<User?> GetProfileAsync(int userId, CancellationToken cancellationToken = default)
@@ -60,12 +63,31 @@ public class UserProfileService : IUserProfileService
         var existing = await userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
         if (existing is null)
         {
+            user.UserId = userId;
             await userRepository.AddAsync(user, cancellationToken).ConfigureAwait(false);
         }
         else
         {
+            user.UserId = userId;
+            user.PasswordHash = existing.PasswordHash;
+            user.ProfilePicturePath = existing.ProfilePicturePath;
+            user.ParsedCv = existing.ParsedCv;
+            user.CurrentLevel = existing.CurrentLevel;
+            user.TotalExperiencePoints = existing.TotalExperiencePoints;
+            user.ActiveAccount = existing.ActiveAccount;
+            user.CreatedAt = existing.CreatedAt;
             await userRepository.UpdateAsync(user, cancellationToken).ConfigureAwait(false);
         }
+    }
+
+    public async Task<User> UploadCvAsync(int userId, Stream stream, string fileName, CancellationToken cancellationToken = default)
+    {
+        using var reader = new StreamReader(stream);
+        var content = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+        var fileType = Path.GetExtension(fileName);
+        var parsedUser = cvParsingService.ParseCvFile(content, fileType);
+        await SaveAsync(userId, parsedUser, cancellationToken).ConfigureAwait(false);
+        return parsedUser;
     }
 
     public string GenerateParsedCvText(User user)

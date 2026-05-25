@@ -68,6 +68,15 @@ namespace PussyCats.Library.ServiceProxies
             response.EnsureSuccessStatusCode();
         }
 
+        public async Task<User> UploadCvAsync(int userId, Stream stream, string fileName, CancellationToken cancellationToken = default)
+        {
+            using var content = new MultipartFormDataContent();
+            content.Add(new StreamContent(stream), "file", fileName);
+            var response = await _http.PostAsync($"api/users/{userId}/cv", content, cancellationToken);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<User>(_jsonOptions, cancellationToken) ?? new User();
+        }
+
         // Stub out image logic for Phase 5 web dashboard (handled via browser multipart form uploads later)
         public Task UpdateProfilePicturePathAsync(int userId, string path, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task RemoveProfilePicturePathAsync(int userId, CancellationToken cancellationToken = default) => Task.CompletedTask;

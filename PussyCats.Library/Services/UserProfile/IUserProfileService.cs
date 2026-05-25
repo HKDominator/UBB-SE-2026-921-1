@@ -19,5 +19,7 @@ public interface IUserProfileService
 
     Task SaveAsync(int userId, User user, CancellationToken cancellationToken = default);
 
+    Task<User> UploadCvAsync(int userId, Stream stream, string fileName, CancellationToken cancellationToken = default);
+
     Task<int> RecalculateLevelAsync(User user, CancellationToken cancellationToken = default);
 }

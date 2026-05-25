@@ -537,9 +537,26 @@
         .addEventListener("click", () => addActivity());
     </script>
     <script>
-        document
-        .getElementById("uploadCvBtn")
-        .addEventListener("click", () => uploadCv(document.getElementById("UserId").value, document.getElementById("cvFileInput").files[0]));
+        document.getElementById("uploadCvBtn").addEventListener("click", async () => {
+            const file = document.getElementById("cvFileInput").files[0];
+            const msgEl = document.getElementById("cvUploadMessage");
+            if (!file) {
+                msgEl.textContent = "Please select a file.";
+                msgEl.className = "mt-3 text-danger";
+                return;
+            }
+            msgEl.textContent = "Uploading...";
+            msgEl.className = "mt-3 text-muted";
+            try {
+                const user = await uploadCv(file);
+                populateProfileForm(user);
+                msgEl.textContent = "CV uploaded. Form populated — review and save.";
+                msgEl.className = "mt-3 text-success";
+            } catch (err) {
+                msgEl.textContent = err.message || "Upload failed.";
+                msgEl.className = "mt-3 text-danger";
+            }
+        });
     </script>
     <script>
         function populateProfileForm(user) {
@@ -555,7 +572,7 @@
         setValue("University", user.university);
         setValue("Address", user.address);
         setValue("Motivation", user.motivation);
-        setValue("PhoneNumber", user.phone);
+        setValue("Phone", user.phone);
 
         const gender =
         document.getElementById("Gender");
@@ -592,7 +609,7 @@
         function populateSkills(skills) {
 
         const container =
-        document.getElementById("skillsContainer");
+        document.getElementById("skills-container");
 
         if (!container) return;
 
@@ -600,14 +617,20 @@
 
         if (!skills) return;
 
-        skills.forEach(skill => {
+        skills.forEach((skill, index) => {
 
         const name =
         skill.skill?.name || skill.name;
 
         if (!name) return;
 
-        addSkillToUi(name);
+        const html = `<div class="badge bg-primary p-2 me-2 mb-2 skill-item">
+            ${escapeHtml(name)}
+            <button type="button" class="btn-close btn-close-white ms-2" onclick="removeSkill(this)"></button>
+            <input type="hidden" name="Skills[${index}].Skill.Name" value="${escapeHtml(name)}" />
+        </div>`;
+
+        container.insertAdjacentHTML("beforeend", html);
         });
         }
     </script>

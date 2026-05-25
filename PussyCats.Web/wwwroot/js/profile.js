@@ -49,6 +49,12 @@
 function removeSkill(button) {
 
     button.closest(".skill-item").remove();
+
+    const container = document.getElementById("skills-container");
+    Array.from(container.querySelectorAll(".skill-item")).forEach((item, index) => {
+        const hidden = item.querySelector("input[type='hidden']");
+        if (hidden) { hidden.name = `Skills[${index}].Skill.Name`; }
+    });
 }
 
     function addProject(project = null) {
@@ -218,11 +224,16 @@ function removeItem(button) {
     item.remove();
 }
 
-async function uploadCv(userId, file) {
+async function uploadCv(file) {
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch(`/api/users/${userId}/cv`, {
+    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+    if (token) {
+        formData.append("__RequestVerificationToken", token);
+    }
+
+    const res = await fetch(`/UserProfile/UploadCv`, {
         method: "POST",
         body: formData
     });

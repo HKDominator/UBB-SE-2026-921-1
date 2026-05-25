@@ -1,0 +1,211 @@
+﻿@model User
+
+@{
+    ViewData["Title"] = "Edit Profile";
+}
+
+<h2>Edit Profile</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+<form asp-action="Edit" method="post">
+
+    <div class="row">
+        <div class="col-md-6">
+            <label>First Name</label>
+            <input asp-for="FirstName" class="form-control" />
+        </div>
+
+        <div class="col-md-6">
+            <label>Last Name</label>
+            <input asp-for="LastName" class="form-control" />
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <label>Age</label>
+            <input asp-for="Age" type="number" class="form-control" />
+        </div>
+
+        <div class="col-md-6">
+            <label>Gender</label>
+
+            <select asp-for="Gender" class="form-select">
+                <option value="">Select Gender</option>
+                <option>Male</option>
+                <option>Female</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <label>Email</label>
+            <input asp-for="Email" class="form-control" />
+        </div>
+
+        <div class="col-md-6">
+            <label>Phone</label>
+            <input asp-for="Phone" class="form-control" />
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <label>GitHub</label>
+            <input asp-for="GitHub" class="form-control" />
+        </div>
+
+        <div class="col-md-6">
+            <label>LinkedIn</label>
+            <input asp-for="LinkedIn" class="form-control" />
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <label>Country</label>
+            <input asp-for="Country" class="form-control" />
+        </div>
+
+        <div class="col-md-6">
+            <label>City</label>
+            <input asp-for="City" class="form-control" />
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <label>University</label>
+        <input asp-for="University" class="form-control" />
+    </div>
+
+    <div class="mt-3">
+        <label>Expected Graduation Year</label>
+
+        <select asp-for="ExpectedGraduationYear" class="form-select">
+            @for (int year = DateTime.Now.Year; year <= DateTime.Now.Year + 10; year++)
+            {
+                <option value="@year">@year</option>
+            }
+        </select>
+    </div>
+
+    <div class="mt-3">
+        <label>Address</label>
+        <textarea asp-for="Address" class="form-control"></textarea>
+    </div>
+
+    <div class="form-check mt-3">
+        <input asp-for="HasDisabilities" class="form-check-input" />
+        <label asp-for="HasDisabilities" class="form-check-label">
+            Disabilities
+        </label>
+    </div>
+
+    <hr />
+
+    <h4>Skills</h4>
+
+    <div id="skills-container">
+        @for (int i = 0; i < Model.Skills.Count; i++)
+        {
+            <div class="mb-2">
+                <input name="Skills[@i].Skill.Name"
+                       value="@Model.Skills[i].Skill?.Name"
+                       class="form-control" />
+            </div>
+        }
+    </div>
+
+    <button type="button"
+            class="btn btn-secondary"
+            onclick="addSkill()">
+        Add Skill
+    </button>
+
+    <hr />
+
+    <h4>Work Experience</h4>
+
+    <div id="work-container">
+
+        @for (int i = 0; i < Model.WorkExperiences.Count; i++)
+        {
+            <div class="card p-3 mb-3">
+
+                <input name="WorkExperiences[@i].Company"
+                       value="@Model.WorkExperiences[i].Company"
+                       class="form-control mb-2"
+                       placeholder="Company" />
+
+                <input name="WorkExperiences[@i].JobTitle"
+                       value="@Model.WorkExperiences[i].JobTitle"
+                       class="form-control mb-2"
+                       placeholder="Job Title" />
+
+                <textarea name="WorkExperiences[@i].Description"
+                          class="form-control">@Model.WorkExperiences[i].Description</textarea>
+
+            </div>
+        }
+    </div>
+
+    <button type="button"
+            class="btn btn-secondary"
+            onclick="addWorkExperience()">
+        Add Work Experience
+    </button>
+
+    <hr />
+
+    <h4>Projects</h4>
+
+    <div id="projects-container">
+        @for (int i = 0; i < Model.Projects.Count; i++)
+        {
+            <div class="card p-3 mb-3">
+
+                <input name="Projects[@i].Name"
+                       value="@Model.Projects[i].Name"
+                       class="form-control mb-2"
+                       placeholder="Project Name" />
+
+                <textarea name="Projects[@i].Description"
+                          class="form-control">@Model.Projects[i].Description</textarea>
+
+            </div>
+        }
+    </div>
+
+    <button type="button"
+            class="btn btn-secondary"
+            onclick="addProject()">
+        Add Project
+    </button>
+
+    <hr />
+
+    <div class="mt-3">
+        <label>Motivation</label>
+
+        <textarea asp-for="Motivation"
+                  class="form-control"
+                  rows="5"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-4">
+        Save Profile
+    </button>
+
+</form>
+
+@section Scripts
+{
+    <script src="~/js/profile.js"></script>
+}

@@ -5,6 +5,7 @@ using PussyCats.Library.Services.Matches;
 using PussyCats.Library.Services.UserProfileService;
 using PussyCats.Library.Services.Users;
 using PussyCats.Library.Services;
+using PussyCats.Library.Services.CvParsing;
 
 namespace PussyCats.Api.Controllers;
 
@@ -16,13 +17,15 @@ public class UsersController : ControllerBase
     private readonly IMatchService matches;
     private readonly IDocumentService documents;
     private readonly IUserProfileService userProfileService;
+    private readonly ICvParsingService cvParsingService;
 
-    public UsersController(IUserService users, IMatchService matches, IDocumentService documents, IUserProfileService userProfileService)
+    public UsersController(IUserService users, IMatchService matches, IDocumentService documents, IUserProfileService userProfileService, ICvParsingService cvParsingService)
     {
         this.users = users;
         this.matches = matches;
         this.documents = documents;
         this.userProfileService = userProfileService;
+        this.cvParsingService = cvParsingService;
     }
 
     [HttpGet]
@@ -107,8 +110,36 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost("{id}/cv")]
-    public IActionResult ParseCv(int id) =>
-        Problem("CV parsing routes through /api/documents/upload.", statusCode: 501);
+    public async Task<IActionResult> UploadCv(
+    int id,
+    IFormFile file,
+    CancellationToken cancellationToken)
+    {
+        var user = await users.GetByIdAsync(id, cancellationToken);
+        if (user is null)
+            return NotFound();
+
+        if (file is null || file.Length == 0)
+            return BadRequest(new { detail = "No file uploaded." });
+
+        try
+        {
+            using var reader = new StreamReader(file.OpenReadStream());
+            var content = await reader.ReadToEndAsync();
+
+            var fileType = Path.GetExtension(file.FileName);
+
+            var parsedUser = cvParsingService.ParseCvFile(content, fileType);
+
+            await userProfileService.SaveAsync(id, parsedUser, cancellationToken);
+
+            return Ok(parsedUser);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { detail = ex.Message });
+        }
+    }
 
     [HttpGet("{id}/compatibility")]
     public IActionResult GetCompatibility(int id) =>

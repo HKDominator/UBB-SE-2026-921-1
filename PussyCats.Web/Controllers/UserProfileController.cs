@@ -124,7 +124,7 @@ public class UserProfileController : Controller
         }
 
         try
-        { 
+        {
             await userProfileService.SaveAsync(CurrentUserId, model, CancellationToken.None);
 
             TempData["Success"] = "Profile saved successfully.";
@@ -136,6 +136,24 @@ public class UserProfileController : Controller
             ModelState.AddModelError(string.Empty, ex.Message);
 
             return View(model);
+        }
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadCv(IFormFile file, CancellationToken cancellationToken)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest(new { detail = "No file uploaded." });
+
+        try
+        {
+            await using var stream = file.OpenReadStream();
+            var user = await userProfileService.UploadCvAsync(CurrentUserId, stream, file.FileName, cancellationToken);
+            return Json(user);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { detail = ex.Message });
         }
     }
 }

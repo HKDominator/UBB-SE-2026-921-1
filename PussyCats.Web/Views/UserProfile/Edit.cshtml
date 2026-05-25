@@ -278,13 +278,177 @@
                   rows="5"></textarea>
     </div>
 
+    <hr />
+    <h4>Extra-Curricular Activities</h4>
+
+    <div id="activitiesContainer">
+        @if (Model.ExtraCurricularActivities != null)
+        {
+            for (int i = 0; i < Model.ExtraCurricularActivities.Count; i++)
+            {
+                <div class="card mb-3 p-3 activity-item">
+                    <div class="row mb-2">
+                        <div class="col-md-5">
+                            <label class="form-label">Activity Name</label>
+                            <input asp-for="ExtraCurricularActivities[i].ActivityName"
+                                   class="form-control" />
+                        </div>
+
+                        <div class="col-md-5">
+                            <label class="form-label">Organization</label>
+                            <input asp-for="ExtraCurricularActivities[i].Organization"
+                                   class="form-control" />
+                        </div>
+
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button"
+                                    class="btn btn-danger remove-activity">
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Role</label>
+                            <input asp-for="ExtraCurricularActivities[i].Role"
+                                   class="form-control" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Period</label>
+                            <input asp-for="ExtraCurricularActivities[i].Period"
+                                   class="form-control" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Description</label>
+                        <textarea asp-for="ExtraCurricularActivities[i].Description"
+                                  class="form-control"
+                                  rows="3"></textarea>
+                    </div>
+                </div>
+            }
+        }
+        <button type="button"
+                class="btn btn-outline-primary mb-4"
+                id="addActivityBtn">
+            Add Activity
+        </button>
+    </div>
+
     <button type="submit" class="btn btn-primary mt-4">
         Save Profile
     </button>
 
 </form>
 
+
+<template id="activityTemplate">
+    <div class="card mb-3 p-3 activity-item">
+        <div class="row mb-2">
+            <div class="col-md-5">
+                <label class="form-label">Activity Name</label>
+                <input name="ExtraCurricularActivities[INDEX].ActivityName"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-5">
+                <label class="form-label">Organization</label>
+                <input name="ExtraCurricularActivities[INDEX].Organization"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button"
+                        class="btn btn-danger remove-activity">
+                    Remove
+                </button>
+            </div>
+        </div>
+
+        <div class="row mb-2">
+            <div class="col-md-6">
+                <label class="form-label">Role</label>
+                <input name="ExtraCurricularActivities[INDEX].Role"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Period</label>
+                <input name="ExtraCurricularActivities[INDEX].Period"
+                       class="form-control" />
+            </div>
+        </div>
+
+        <div>
+            <label class="form-label">Description</label>
+            <textarea name="ExtraCurricularActivities[INDEX].Description"
+                      class="form-control"
+                      rows="3"></textarea>
+        </div>
+    </div>
+</template>
+
 @section Scripts
 {
     <script src="~/js/profile.js"></script>
+    <script>
+        (() => {
+
+        const activitiesContainer =
+        document.getElementById("activitiesContainer");
+
+        const activityTemplate =
+        document.getElementById("activityTemplate");
+
+        document
+        .getElementById("addActivityBtn")
+        .addEventListener("click", () => {
+
+        const index =
+        activitiesContainer.querySelectorAll(".activity-item").length;
+
+        let html = activityTemplate.innerHTML
+        .replaceAll("INDEX", index);
+
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = html;
+
+        activitiesContainer.appendChild(wrapper.firstElementChild);
+        });
+
+        document.addEventListener("click", e => {
+
+        if (e.target.classList.contains("remove-activity")) {
+
+        e.target
+        .closest(".activity-item")
+        .remove();
+
+        reindexActivities();
+        }
+        });
+
+        function reindexActivities() {
+
+        const items =
+        activitiesContainer.querySelectorAll(".activity-item");
+
+        items.forEach((item, index) => {
+
+        item.querySelectorAll("input, textarea")
+        .forEach(input => {
+
+        input.name = input.name.replace(
+        /ExtraCurricularActivities\[\d+\]/,
+        `ExtraCurricularActivities[${index}]`
+        );
+        });
+        });
+        }
+
+        })();
+    </script>
 }

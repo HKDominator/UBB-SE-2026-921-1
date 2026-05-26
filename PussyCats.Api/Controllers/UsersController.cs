@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using PussyCats.Library.Domain;
-using PussyCats.Library.Services.Documents;
-using PussyCats.Library.Services.Matches;
-using PussyCats.Library.Services.UserProfileService;
-using PussyCats.Library.Services.Users;
 using PussyCats.Library.Services;
 using PussyCats.Library.Services.CvParsing;
+using PussyCats.Library.Services.Documents;
+using PussyCats.Library.Services.Matches;
+using PussyCats.Library.Services.PdfExport;
+using PussyCats.Library.Services.UserProfileService;
+using PussyCats.Library.Services.Users;
 
 namespace PussyCats.Api.Controllers;
 
@@ -18,14 +19,16 @@ public class UsersController : ControllerBase
     private readonly IDocumentService documents;
     private readonly IUserProfileService userProfileService;
     private readonly ICvParsingService cvParsingService;
+    private readonly IPdfExportService pdfExportService;
 
-    public UsersController(IUserService users, IMatchService matches, IDocumentService documents, IUserProfileService userProfileService, ICvParsingService cvParsingService)
+    public UsersController(IUserService users, IMatchService matches, IDocumentService documents, IUserProfileService userProfileService, ICvParsingService cvParsingService, IPdfExportService pdfExportService)
     {
         this.users = users;
         this.matches = matches;
         this.documents = documents;
         this.userProfileService = userProfileService;
         this.cvParsingService = cvParsingService;
+        this.pdfExportService = pdfExportService;
     }
 
     [HttpGet]
@@ -180,6 +183,43 @@ public class UsersController : ControllerBase
         if (user is null) return NotFound();
         string parsedCv = Helpers.GenerateParsedCvText(user);
         return Ok(new { ParsedCv = parsedCv });
+    }
+
+    [HttpGet("{id}/cv/pdf")]
+    public async Task<IActionResult> DownloadCvPdf(
+    int id,
+    CancellationToken cancellationToken)
+    {
+        var user = await users.GetByIdAsync(id, cancellationToken);
+
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        byte[] pdf = await pdfExportService.GeneratePdfAsync(user);
+
+        return File(
+            pdf,
+            "application/pdf",
+            $"{user.FirstName}_{user.LastName}_CV.pdf");
+    }
+
+    [HttpGet("{id}/cv/html")]
+    public async Task<IActionResult> GetCvHtml(
+    int id,
+    CancellationToken cancellationToken)
+    {
+        var user = await users.GetByIdAsync(id, cancellationToken);
+
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        string html = await pdfExportService.RenderHtmlAsync(user);
+
+        return Content(html, "text/html");
     }
 
     public record UpdateActiveRequest(bool IsActive);

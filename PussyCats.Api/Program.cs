@@ -12,30 +12,31 @@ using PussyCats.Library.Repositories.Recommendations;
 using PussyCats.Library.Repositories.Skills;
 using PussyCats.Library.Repositories.SkillTests;
 using PussyCats.Library.Repositories.Users;
+using PussyCats.Library.Services.ChatService;
+using PussyCats.Library.Services.CompanyRecommendationService;
+using PussyCats.Library.Services.CompanyService;
+using PussyCats.Library.Services.CompanyStatusService;
 using PussyCats.Library.Services.CompatibilityService;
 using PussyCats.Library.Services.CooldownService;
-using PussyCats.Library.Services.CompanyService;
-using PussyCats.Library.Services.CompanyRecommendationService;
-using PussyCats.Library.Services.CompanyStatusService;
-using PussyCats.Library.Services.Documents;
 using PussyCats.Library.Services.CvParsing;
+using PussyCats.Library.Services.Developers;
+using PussyCats.Library.Services.Documents;
 using PussyCats.Library.Services.FileStorage;
 using PussyCats.Library.Services.Jobs;
 using PussyCats.Library.Services.JobSkills;
 using PussyCats.Library.Services.Matches;
+using PussyCats.Library.Services.PdfExport;
 using PussyCats.Library.Services.PersonalityTestService;
 using PussyCats.Library.Services.Preferences;
 using PussyCats.Library.Services.RecommendationAlgorithm;
 using PussyCats.Library.Services.Recommendations;
+using PussyCats.Library.Services.SkillGapService;
 using PussyCats.Library.Services.Skills;
 using PussyCats.Library.Services.SkillTests;
-using PussyCats.Library.Services.SkillGapService;
 using PussyCats.Library.Services.UserProfileService;
 using PussyCats.Library.Services.UserRecommendationService;
 using PussyCats.Library.Services.Users;
 using PussyCats.Library.Services.UserSkillService;
-using PussyCats.Library.Services.ChatService;
-using PussyCats.Library.Services.Developers;
 using PussyCats.Library.Services.UserStatusService;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
@@ -120,6 +121,12 @@ builder.Services.AddTransient<ICompanyRecommendationService, CompanyRecommendati
 builder.Services.AddScoped<ICompanyStatusService, CompanyStatusService>();
 builder.Services.AddScoped<IPreferenceService, PreferenceService>();
 
+builder.Services.AddScoped<IPdfExportService>(sp =>
+{
+    var env = sp.GetRequiredService<IWebHostEnvironment>();
+    return new PdfExportService(env.WebRootPath);
+});
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -134,6 +141,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
+
+
 
 app.UseHttpsRedirection();
 

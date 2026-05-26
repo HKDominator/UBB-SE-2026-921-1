@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -7,6 +5,10 @@ using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Web.WebView2.Core;
 using PussyCats.App.ViewModels;
 using PussyCats_App.Services.PdfExportService;
+using System;
+using System.IO;
+using Windows.Storage;
+using Windows.Storage.Pickers;
 
 namespace PussyCats_App.Views.Candidate;
 
@@ -17,43 +19,72 @@ public sealed partial class ExportCVPage : Page
     public ExportCVPage()
     {
         InitializeComponent();
-        Loaded += OnPageLoaded;
+        Loaded += OnLoaded;
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs eventArguments)
+    private async void OnLoaded(object sender, RoutedEventArgs e)
     {
-        base.OnNavigatedTo(eventArguments);
-    }
+        Loaded -= OnLoaded;
 
-    private async void OnPageLoaded(object sender, RoutedEventArgs eventArguments)
-    {
-        Loaded -= OnPageLoaded;
         loadingRing.IsActive = true;
 
         await CvWebView.EnsureCoreWebView2Async();
 
-        var templateFolder = Path.Combine(AppContext.BaseDirectory, "resources");
-        CvWebView.CoreWebView2.SetVirtualHostNameToFolderMapping(
-            "assets.local", templateFolder, CoreWebView2HostResourceAccessKind.Allow);
-
-        var pdfService = new PdfExportService(CvWebView);
-
         viewModel = App.Services.GetRequiredService<ExportCVViewModel>();
-        viewModel.AttachExportService(pdfService);
         DataContext = viewModel;
 
-        statusText.SetBinding(TextBlock.TextProperty,
-            new Microsoft.UI.Xaml.Data.Binding { Path = new Microsoft.UI.Xaml.PropertyPath("StatusText"), Source = viewModel });
+        var previewUrl = viewModel.GetPreviewUrl();
+        CvWebView.Source = new Uri(previewUrl);
 
-        await viewModel.LoadAndRenderCVAsync();
+        statusText.Text = "Loading preview...";
+
         loadingRing.IsActive = false;
+        statusText.Text = string.Empty;
     }
 
-    private async void OnDownloadClick(object sender, RoutedEventArgs eventArguments)
+    private async void OnDownloadClick(object sender, RoutedEventArgs e)
     {
-        if (viewModel is null) return;
+        if (viewModel == null)
+        {
+            return;
+        }
+
         loadingRing.IsActive = true;
-        await viewModel.ExportCVCommand.ExecuteAsync(null);
-        loadingRing.IsActive = false;
+        statusText.Text = "Downloading PDF...";
+
+        try
+        {
+            var pdfBytes = await viewModel.DownloadPdfAsync();
+
+            var savePicker = new FileSavePicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+                SuggestedFileName = "CV"
+            };
+
+            savePicker.FileTypeChoices.Add("PDF", new List<string> { ".pdf" });
+
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainAppWindow);
+            WinRT.Interop.InitializeWithWindow.Initialize(savePicker, hwnd);
+
+            var file = await savePicker.PickSaveFileAsync();
+            if (file == null)
+            {
+                statusText.Text = "Cancelled.";
+                return;
+            }
+
+            await FileIO.WriteBytesAsync(file, pdfBytes);
+
+            statusText.Text = "Downloaded successfully!";
+        }
+        catch (Exception ex)
+        {
+            statusText.Text = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            loadingRing.IsActive = false;
+        }
     }
 }

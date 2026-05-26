@@ -9,26 +9,15 @@ namespace PussyCats.App.ViewModels;
 public partial class ExportCVViewModel : DispatchableObservableObject
 {
     private readonly IUserProfileService userProfileService;
-    private IPdfExportService? pdfExportService;
     private readonly SessionContext? session;
+
     private string statusText = string.Empty;
     private bool isLoading;
 
-    public ExportCVViewModel(IUserProfileService userProfileService)
+    public ExportCVViewModel(IUserProfileService userProfileService, SessionContext session)
     {
         this.userProfileService = userProfileService;
-    }
-
-    public ExportCVViewModel(IUserProfileService userProfileService, SessionContext session)
-        : this(userProfileService)
-    {
         this.session = session;
-    }
-
-    public ExportCVViewModel(IPdfExportService pdfExportService, IUserProfileService userProfileService)
-        : this(userProfileService)
-    {
-        this.pdfExportService = pdfExportService;
     }
 
     public int UserId { get; set; }
@@ -45,72 +34,25 @@ public partial class ExportCVViewModel : DispatchableObservableObject
         set => SetProperty(ref isLoading, value);
     }
 
-    public void AttachExportService(IPdfExportService exportService)
+    public string GetPreviewUrl()
     {
-        pdfExportService = exportService;
-    }
-
-    public async Task LoadAndRenderCVAsync(CancellationToken cancellationToken = default)
-    {
-        if (pdfExportService is null)
-        {
-            StatusText = "PDF preview is not attached to this view.";
-            return;
-        }
-
-        var resolvedUserId = UserId > 0
+        var id = UserId > 0
             ? UserId
-            : session is null ? ViewModelSupport.DefaultUserId : ViewModelSupport.ResolveUserId(session);
+            : ViewModelSupport.ResolveUserId(session);
 
-        IsLoading = true;
-        StatusText = "Loading CV preview...";
-
-        try
-        {
-            var userProfile = await userProfileService.GetProfileAsync(resolvedUserId, cancellationToken)
-                ?? throw new InvalidOperationException("User profile not found.");
-
-            await pdfExportService.RenderProfileAsync(userProfile);
-            StatusText = string.Empty;
-        }
-        catch (Exception exception)
-        {
-            StatusText = $"Preview failed: {exception.Message}";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+        return $"https://localhost:5001/api/users/{id}/cv/html";
     }
 
-    [RelayCommand]
-    private async Task ExportCVAsync()
+    public async Task<byte[]> DownloadPdfAsync(CancellationToken cancellationToken = default)
     {
-        if (pdfExportService is null)
-        {
-            StatusText = "PDF export is not attached to this view.";
-            return;
-        }
+        var id = UserId > 0
+            ? UserId
+            : ViewModelSupport.ResolveUserId(session);
 
-        IsLoading = true;
-        StatusText = "Saving PDF...";
+        using var http = new HttpClient();
 
-        try
-        {
-            await pdfExportService.DownloadPdfAsync();
-            StatusText = "Downloaded successfully!";
-        }
-        catch (OperationCanceledException)
-        {
-            StatusText = string.Empty;
-        }
-        catch (Exception exception)
-        {
-            StatusText = $"Export failed: {exception.Message}";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+        var url = $"https://localhost:5001/api/users/{id}/cv/pdf";
+
+        return await http.GetByteArrayAsync(url, cancellationToken);
     }
 }

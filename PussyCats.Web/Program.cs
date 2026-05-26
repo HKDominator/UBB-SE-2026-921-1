@@ -44,6 +44,7 @@ builder.Services.AddTransient<JwtForwardingHandler>();
 builder.Services.AddControllersWithViews(options =>
 {
     options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+    options.Filters.Add<JwtSessionFilter>();
     options.Filters.Add<ModeAuthorizeFilter>();
 })
     .AddJsonOptions(options =>
@@ -51,6 +52,7 @@ builder.Services.AddControllersWithViews(options =>
             new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
 builder.Services.AddScoped<ModeAuthorizeFilter>();
+builder.Services.AddScoped<JwtSessionFilter>();
 
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

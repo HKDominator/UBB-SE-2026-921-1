@@ -5,11 +5,11 @@ namespace PussyCats.Web.Models;
 public class RegisterViewModel
 {
     [Required]
-    [Display(Name = "Prenume")]
+    [Display(Name = "First Name")]
     public string FirstName { get; set; } = string.Empty;
 
     [Required]
-    [Display(Name = "Nume")]
+    [Display(Name = "Last Name")]
     public string LastName { get; set; } = string.Empty;
 
     [Required]
@@ -18,12 +18,12 @@ public class RegisterViewModel
 
     [Required]
     [DataType(DataType.Password)]
-    [MinLength(6, ErrorMessage = "Parola trebuie să aibă cel puțin 6 caractere.")]
+    [MinLength(6, ErrorMessage = "The password must contain at least 6 characters.")]
     public string Password { get; set; } = string.Empty;
 
     [Required]
     [DataType(DataType.Password)]
-    [Display(Name = "Confirmă parola")]
-    [Compare(nameof(Password), ErrorMessage = "Parolele nu coincid.")]
+    [Display(Name = "Confirm password")]
+    [Compare(nameof(Password), ErrorMessage = "Passwords are not the same!")]
     public string ConfirmPassword { get; set; } = string.Empty;
 }

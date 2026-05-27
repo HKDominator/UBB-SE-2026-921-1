@@ -180,9 +180,9 @@ public class DocumentsControllerTests
 
         var result = await controller.Edit(5, model, default);
 
-        await documents.Received(1).UpdateAsync(Arg.Is<Document>(d => 
-            d.DocumentId == 5 && 
-            d.DocumentName == "New Name"
+        await documents.Received(1).UpdateAsync(Arg.Is<Document>(document => 
+            document.DocumentId == 5 && 
+            document.DocumentName == "New Name"
         ), Arg.Any<CancellationToken>());
 
         result.Should().BeOfType<RedirectToActionResult>().Which.ActionName.Should().Be(nameof(DocumentsController.Index));

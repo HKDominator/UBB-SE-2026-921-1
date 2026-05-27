@@ -33,17 +33,17 @@ public class PdfExportService : IPdfExportService
     private string BuildHtml(User user)
     {
         var skills = user.Skills is { Count: > 0 }
-            ? string.Join(", ", user.Skills.Select(s => HttpUtility.HtmlEncode(s.Skill?.Name ?? string.Empty)))
+            ? string.Join(", ", user.Skills.Select(userSkill => HttpUtility.HtmlEncode(userSkill.Skill?.Name ?? string.Empty)))
             : "No skills listed";
 
         var workExperience = BuildSection(user.WorkExperiences, we =>
-            $"<div class=\"entry\"><strong>{HttpUtility.HtmlEncode(we.Company)}</strong> — {HttpUtility.HtmlEncode(we.JobTitle)}<br/><em>{we.StartDate:yyyy-MM} – {(we.EndDate.HasValue ? we.EndDate.Value.ToString("yyyy-MM") : "Present")}</em><p>{HttpUtility.HtmlEncode(we.Description)}</p></div>");
+            $"<div class=\"entry\"><strong>{HttpUtility.HtmlEncode(we.Company)}</strong> — {HttpUtility.HtmlEncode(we.JobTitle)}<br/><em>{we.StartDate:yyyy-MM} – {(we.EndDate.HasValue ? we.EndDate.Value.ToString("yyyy-MM") : "Present")}</em><project>{HttpUtility.HtmlEncode(we.Description)}</project></div>");
 
-        var projects = BuildSection(user.Projects, p =>
-            $"<div class=\"entry\"><strong>{HttpUtility.HtmlEncode(p.Name)}</strong><p>{HttpUtility.HtmlEncode(p.Description)}</p></div>");
+        var projects = BuildSection(user.Projects, project =>
+            $"<div class=\"entry\"><strong>{HttpUtility.HtmlEncode(project.Name)}</strong><project>{HttpUtility.HtmlEncode(project.Description)}</project></div>");
 
-        var activities = BuildSection(user.ExtraCurricularActivities, a =>
-            $"<div class=\"entry\"><strong>{HttpUtility.HtmlEncode(a.ActivityName)}</strong> — {HttpUtility.HtmlEncode(a.Organization)}<br/><em>{HttpUtility.HtmlEncode(a.Period)}</em><p>{HttpUtility.HtmlEncode(a.Description)}</p></div>");
+        var activities = BuildSection(user.ExtraCurricularActivities, extracurricuralActivity =>
+            $"<div class=\"entry\"><strong>{HttpUtility.HtmlEncode(extracurricuralActivity.ActivityName)}</strong> — {HttpUtility.HtmlEncode(extracurricuralActivity.Organization)}<br/><em>{HttpUtility.HtmlEncode(extracurricuralActivity.Period)}</em><project>{HttpUtility.HtmlEncode(extracurricuralActivity.Description)}</project></div>");
 
         return templateHtml
             .Replace("{{FIRST_NAME}}", HttpUtility.HtmlEncode(user.FirstName))
@@ -65,7 +65,7 @@ public class PdfExportService : IPdfExportService
     private static string BuildSection<T>(ICollection<T>? items, Func<T, string> render)
     {
         if (items is null || items.Count == 0)
-            return "<p><em>None listed.</em></p>";
+            return "<project><em>None listed.</em></project>";
         var sb = new StringBuilder();
         foreach (var item in items)
             sb.Append(render(item));

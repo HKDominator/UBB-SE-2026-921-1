@@ -61,9 +61,9 @@ public class DeveloperController : Controller
     {
         var interactionType = action == "like" ? DeveloperInteractionType.Like : DeveloperInteractionType.Dislike;
         var interactions = await developerService.GetInteractionsAsync(cancellationToken);
-        var existing = interactions.FirstOrDefault(i =>
-            i.Developer.DeveloperId == CurrentUserId &&
-            i.DeveloperPost.DeveloperPostId == postId);
+        var existing = interactions.FirstOrDefault(developerInteraction =>
+            developerInteraction.Developer.DeveloperId == CurrentUserId &&
+            developerInteraction.DeveloperPost.DeveloperPostId == postId);
 
         if (existing is not null && existing.Type == interactionType)
             await developerService.RemoveInteractionAsync(existing.DeveloperInteractionId, cancellationToken);
@@ -81,7 +81,7 @@ public class DeveloperController : Controller
         return posts.Select(post =>
         {
             var postInteractions = interactions
-                .Where(i => i.DeveloperPost.DeveloperPostId == post.DeveloperPostId)
+                .Where(developerInteraction => developerInteraction.DeveloperPost.DeveloperPostId == post.DeveloperPostId)
                 .ToList();
             return new DeveloperPostViewModel(post, postInteractions, currentUserId);
         }).ToList();

@@ -114,7 +114,7 @@ public class CompatibilityService : ICompatibilityService
         double max = 0;
         foreach (var skill in group.Skills)
         {
-            var match = userSkills.FirstOrDefault(u => string.Equals(u.Skill?.Name, skill.Name, StringComparison.OrdinalIgnoreCase));
+            var match = userSkills.FirstOrDefault(userSkill => string.Equals(userSkill.Skill?.Name, skill.Name, StringComparison.OrdinalIgnoreCase));
             if (match is null) continue;
             double score = match.IsVerified ? match.Score / ScoreNormalizationFactor : UnverifiedSkillScore;
             if (score > max) max = score;

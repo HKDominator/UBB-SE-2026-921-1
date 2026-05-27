@@ -33,9 +33,9 @@
     </div>
 
     @{
-        var visible = Model.Where(c =>
+        var visible = Model.Where(chat =>
             isCompanyMode ||
-            (activeTab == "companies" ? c.Company != null : c.SecondUser != null)
+            (activeTab == "companies" ? chat.Company != null : chat.SecondUser != null)
         ).ToList();
     }
 

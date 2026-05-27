@@ -21,7 +21,7 @@
                     <div class="col-md-4">
                         <label class="form-label">Parameter</label>
                         <select asp-for="@createModel.ParameterType" class="form-select"
-                                asp-items="@(new SelectList(parameterTypes.Select(p => new { Value = p.ToString(), Text = PussyCats.Library.Domain.Enums.DeveloperPostParameterTypeMapper.ToDisplayName(p) }), "Value", "Text"))">
+                                asp-items="@(new SelectList(parameterTypes.Select(developerPostParameterType => new { Value = developerPostParameterType.ToString(), Text = PussyCats.Library.Domain.Enums.DeveloperPostParameterTypeMapper.ToDisplayName(developerPostParameterType) }), "Value", "Text"))">
                         </select>
                     </div>
                     <div class="col-md-6">

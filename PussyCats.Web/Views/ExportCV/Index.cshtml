@@ -203,7 +203,7 @@
                             <div class="extra-title">@activity.ActivityName</div>
                             @{
                                 var meta = new[] { activity.Organization, activity.Role, activity.Period }
-                                    .Where(s => !string.IsNullOrWhiteSpace(s));
+                                    .Where(activityString => !string.IsNullOrWhiteSpace(activityString));
                             }
                             @if (meta.Any())
                             {

@@ -58,8 +58,8 @@ public class AccountController : Controller
         if (!result.Succeeded || result.Response is null)
         {
             var message = result.StatusCode == System.Net.HttpStatusCode.Conflict
-                ? "Adresa de email este deja inregistrata."
-                : "Inregistrare esuata. Incearca din nou.";
+                ? "This email address is already registered."
+                : "Registration failed. Try again";
             ModelState.AddModelError(string.Empty, message);
             return View(model);
         }

@@ -161,7 +161,7 @@ public class DocumentService : IDocumentService, ILocalDocumentFileService
         await documentRepository.RemoveAsync(documentId, cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<string> GetDocumentAbsolutePathAsync(int documentId, CancellationToken cancellationToken = default)
+    public async Task<string> GetDocumentUrlAsync(int documentId, CancellationToken cancellationToken = default)
     {
         var document = await documentRepository.GetByIdAsync(documentId, cancellationToken).ConfigureAwait(false);
 

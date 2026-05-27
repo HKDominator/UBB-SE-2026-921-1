@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using PussyCats.App.Configuration;
-using PussyCats.Library.Adapters;
 using PussyCats.Library.ServiceProxies;
 using PussyCats.Library.Repositories.Documents;
 using PussyCats.Library.Services.Auth;
@@ -92,13 +91,7 @@ public partial class App : Application
         RegisterServiceProxy<IUserService, UserServiceProxy>(services, apiConfiguration);
         RegisterServiceProxy<IUserSkillService, UserSkillServiceProxy>(services, apiConfiguration);
         RegisterServiceProxy<IUserStatusService, UserStatusServiceProxy>(services, apiConfiguration);
-
-        services.AddTransient<IDocumentRepository, DocumentRepositoryAdapter>();
-        services.AddTransient<ILocalDocumentFileService>(provider => new DocumentService(
-            provider.GetRequiredService<IDocumentRepository>(),
-            provider.GetRequiredService<ILocalFileStorageService>(),
-            provider.GetRequiredService<IUserService>(),
-            new CvParsingService()));
+        RegisterServiceProxy<ILocalDocumentFileService, DocumentServiceProxy>(services, apiConfiguration);
 
         services.AddHttpClient<CvExportProxy>(client =>
             client.BaseAddress = new Uri(apiConfiguration.BaseUrl))

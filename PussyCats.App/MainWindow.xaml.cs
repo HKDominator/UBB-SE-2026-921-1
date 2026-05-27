@@ -60,6 +60,7 @@ public sealed partial class MainWindow : Window
         ["DeveloperPage"]             = typeof(Views.Developer.DeveloperPage),
         ["ChatPage"]                  = typeof(Views.ChatPage),
         ["LoginPage"]                 = typeof(LoginPage),
+        ["RegisterPage"]              = typeof(RegisterPage),
     };
 
     public Frame NavigationFrame => contentFrame;
@@ -115,6 +116,16 @@ public sealed partial class MainWindow : Window
         modeSelector.Visibility = Visibility.Collapsed;
         contentFrame.BackStack.Clear();
         contentFrame.Navigate(typeof(LoginPage));
+    }
+
+    public void ShowRegister()
+    {
+        navView.IsPaneVisible = false;
+        navView.IsBackButtonVisible = NavigationViewBackButtonVisible.Collapsed;
+        navView.SelectedItem = null;
+        modeSelector.Visibility = Visibility.Collapsed;
+        contentFrame.BackStack.Clear();
+        contentFrame.Navigate(typeof(RegisterPage));
     }
 
     private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs eventArguments)
@@ -217,7 +228,7 @@ public sealed partial class MainWindow : Window
     private void NavigateTo(string tag)
     {
         var session = App.Services.GetRequiredService<SessionContext>();
-        if (!session.IsAuthenticated && tag != "LoginPage")
+        if (!session.IsAuthenticated && tag != "LoginPage" && tag != "RegisterPage")
         {
             ShowLogin();
             return;

@@ -5,15 +5,15 @@ using PussyCats.App.ViewModels.Auth;
 
 namespace PussyCats_App.Views.Auth;
 
-public sealed partial class LoginPage : Page
+public sealed partial class RegisterPage : Page
 {
-    private readonly LoginViewModel viewModel;
+    private readonly RegisterViewModel viewModel;
 
-    public LoginPage()
+    public RegisterPage()
     {
         InitializeComponent();
-        viewModel = App.Services.GetRequiredService<LoginViewModel>();
-        viewModel.LoginSucceeded += OnLoginSucceeded;
+        viewModel = App.Services.GetRequiredService<RegisterViewModel>();
+        viewModel.RegisterSucceeded += OnRegisterSucceeded;
         DataContext = viewModel;
     }
 
@@ -22,15 +22,20 @@ public sealed partial class LoginPage : Page
         viewModel.Password = PasswordBox.Password;
     }
 
-    private void NavigateToRegister_Click(object sender, RoutedEventArgs eventArguments)
+    private void ConfirmPasswordBox_PasswordChanged(object sender, RoutedEventArgs eventArguments)
+    {
+        viewModel.ConfirmPassword = ConfirmPasswordBox.Password;
+    }
+
+    private void NavigateToLogin_Click(object sender, RoutedEventArgs eventArguments)
     {
         if (App.MainAppWindow is MainWindow mainWindow)
         {
-            mainWindow.ShowRegister();
+            mainWindow.ShowLogin();
         }
     }
 
-    private void OnLoginSucceeded()
+    private void OnRegisterSucceeded()
     {
         if (App.MainAppWindow is MainWindow mainWindow)
         {

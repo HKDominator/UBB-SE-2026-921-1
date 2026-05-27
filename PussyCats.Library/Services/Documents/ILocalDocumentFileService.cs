@@ -8,5 +8,5 @@ public interface ILocalDocumentFileService
 
     Task DeleteDocumentAsync(int documentId, CancellationToken cancellationToken = default);
 
-    Task<string> GetDocumentAbsolutePathAsync(int documentId, CancellationToken cancellationToken = default);
+    Task<string> GetDocumentUrlAsync(int documentId, CancellationToken cancellationToken = default);
 }

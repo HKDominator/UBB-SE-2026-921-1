@@ -129,4 +129,20 @@ public class DocumentsController : ControllerBase
 
         public IFormFile? File { get; set; }
     }
+
+    [HttpGet("{id}/url")]
+    public async Task<IActionResult> GetUrl(int id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var url = await documentFiles
+                .GetDocumentUrlAsync(id, cancellationToken);
+
+            return Ok(url);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return NotFound(exception.Message);
+        }
+    }
 }

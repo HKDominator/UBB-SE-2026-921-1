@@ -69,10 +69,27 @@ public class DocumentServiceProxy : IDocumentService, ILocalDocumentFileService
     }
 
     public async Task<Document> UploadDocumentAsync(Document document, string filePath, CancellationToken cancellationToken = default)
-        => throw new NotSupportedException("File upload is not supported via the HTTP proxy.");
+    {
+        await using var stream = File.OpenRead(filePath);
+
+        return await UploadDocumentFromStreamAsync(
+            document.User.UserId,
+            document.DocumentName,
+            Path.GetFileName(filePath),
+            "application/octet-stream",
+            stream,
+            false,
+            cancellationToken);
+    }
 
     public async Task DeleteDocumentAsync(int documentId, CancellationToken cancellationToken = default)
-        => throw new NotSupportedException("File deletion is not supported via the HTTP proxy.");
+    {
+        var response = await http.DeleteAsync(
+            $"api/documents/{documentId}",
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+    }
 
     public async Task<Document> UploadDocumentFromStreamAsync(
         int userId,
@@ -106,7 +123,9 @@ public class DocumentServiceProxy : IDocumentService, ILocalDocumentFileService
         return (await response.Content.ReadFromJsonAsync<Document>(JsonOptions, cancellationToken: cancellationToken))!;
     }
 
-    public async Task<string> GetDocumentAbsolutePathAsync(int documentId, CancellationToken cancellationToken = default)
-        => throw new NotSupportedException("Path retrieval is not supported via the HTTP proxy.");
+    public async Task<string> GetDocumentUrlAsync(int documentId, CancellationToken cancellationToken = default)
+    {
+        return await http.GetStringAsync($"api/documents/{documentId}/url", cancellationToken);
+    }
 }
 
